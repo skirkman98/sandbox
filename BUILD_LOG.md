@@ -867,3 +867,81 @@ values, switching the FICO filter to Exceptional reproduces the NIM
 cross-check above, switching back to "All merchants" and re-checking KPI
 tiles/LTV-CAC still reproduces the already-known headline numbers exactly
 (no regression), no console errors.
+
+---
+
+## Day 2 — Multi-select comparison chart (2026-08-26)
+
+TODO item 6, the last of today's five: replace the two static single-metric
+"Contribution Profit by merchant" / "by FICO tier" bar charts with a
+general-purpose comparison chart — multi-select on Merchant, Vintage, or
+FICO, any metric (not just Contribution Profit), rendered as a time series
+with a computed blended total.
+
+**Scoped narrower than a literal reading of "make the top filter bar
+multi-select,"** deliberately: the new chart has its own dimension picker
+and its own multi-select checkboxes, layered on top of the existing global
+Merchant/Vintage/FICO/Period filters (reusing the same `skipMerchant`/
+`skipFico` pattern the old charts already used, plus a new `skipVintage`
+option added to `matchesFilter` the same way). Rewriting the whole page's
+top filter bar to multi-select would have touched every other section (KPI
+tiles, trend chart, detail table, driver KPIs) for a change item 6 doesn't
+actually ask for — TODO item 6 talks about "several series on one chart
+instead of one aggregate line," which is about the comparison chart
+specifically, not the whole page's interaction model. Lower blast radius,
+same result for what was asked.
+
+**Design:**
+- "Compare by" picks the dimension (Merchant / Vintage / FICO); a
+  metric picker spans the same registry as item 7 (P&L buckets + the 6
+  driver KPIs, ~12 entries) — `METRIC_REGISTRY`, each entry carrying its own
+  `source` (`DATA.rows` or `DATA.detail`), `compute`, `fmt`, and `mark`.
+- **Mark type follows the metric, not a per-chart setting**: `mark: "bar"`
+  for additive $ measures (Gross Revenue, Cost of Sales, Gross/Contribution
+  Profit) — rendered as **grouped/clustered bars per quarter, never
+  stacked**, since the compared entities are alternatives to look at side by
+  side, not components that sum to a portfolio whole (stacking would
+  visually misrepresent the comparison, the same correctness point flagged
+  in `TODO.md`'s own item 6 text). `mark: "line"` for every rate/yield/
+  per-account metric (margins, the 6 driver KPIs, including PPAA — a $
+  figure but not one that sums across entities either, so it gets a line
+  like the rate metrics, not a bar).
+- **Blended total**: computed by feeding the *union* of matching rows across
+  every selected value into the same `derivePnl`/`deriveDriverKpis`
+  sum-then-divide functions already in place — no new weighting math, just a
+  differently-scoped row set (per the plan). Rendered as a dashed line or a
+  translucent 4th/Nth bar in each cluster, only shown once 2+ values are
+  selected.
+- Selecting nothing shows every value in the dimension (10 merchants, 22
+  vintages, or 5 FICO tiers) — the same default the old charts had.
+
+**One real bug caught in visual QA**: the blended total's line/bar initially
+reused `COLORS[0]` (the same blue as whichever entity happened to be first
+in the selection), so it was visually indistinguishable from that entity
+whenever it was included — e.g. selecting Merchant 1 made "Blended total"
+invisible against Merchant 1's own line. Fixed by adding a dedicated
+`muted` gray to the palette (matching the existing `--muted` CSS token,
+same value in both themes) reserved specifically for the blended series, so
+it never collides with an entity color.
+
+**Per an explicit instruction, the old charts were kept, not deleted**: the
+two old `<section>` blocks are still in `11_build_dashboard.py`'s HTML
+template, commented out (with a note on exactly what to restore), and
+`renderComparisonChart()` — the function that drew them — was never
+removed, just unwired from `renderAll()`. Reinstating them (alongside or
+instead of the new chart) is a small, documented change, not an
+archaeology project, if that's wanted after living with the new one.
+
+**Verified**: pipeline/audit unaffected (dashboard-only change, no pipeline
+script touched) — `08_audit.py` still 7/8. Visual QA via claude-in-chrome:
+selected Merchant 1/4/7 on Contribution Profit and confirmed 4 visually
+distinct grouped bars per quarter (3 entities + blended, Merchant 7 visibly
+near-zero/negative matching its known structural-drag status); switched the
+metric to Revolve Rate and confirmed the mark type switched to lines with a
+correctly dashed, color-distinct blended line; switched "Compare by" to FICO
+tier and confirmed the value picker and legend repopulated with a clean
+Poor > Fair > Good > Very Good > Exceptional ordering (matches intuition —
+lower-tier customers revolve more); confirmed KPI tiles/trend chart still
+reproduce the exact known headline numbers with no selection made (no
+regression from the `matchesFilter`/`skipVintage` change); checked both
+dark and light mode; no console errors.

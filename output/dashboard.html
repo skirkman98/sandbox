@@ -77,6 +77,12 @@
   .kpi-chart-cell h3 { font-size: 0.82rem; margin: 0 0 0.35rem; font-weight: 600; }
   .kpi-chart-cell .kpi-chart-latest { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
 
+  /* Multi-select compare chart (item 6) */
+  .compare-controls { display: flex; gap: 0.9rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
+  .compare-value-picker { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+  .compare-value-picker label { display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; background: var(--page); border: 1px solid var(--grid); border-radius: 6px; padding: 0.28rem 0.6rem; cursor: pointer; }
+  .compare-value-picker input[type="checkbox"] { margin: 0; accent-color: var(--blue); }
+
   svg.chart-svg { width: 100%; height: auto; overflow: visible; }
   svg text { font-family: inherit; fill: var(--ink-2); }
   .axis-line { stroke: var(--grid); stroke-width: 1; }
@@ -177,6 +183,16 @@
   <div id="trend-chart"></div>
 </section>
 
+<!-- Day 2 item 6 replaced the two static "Contribution Profit by merchant" /
+     "by FICO tier" bar charts below with the general-purpose multi-select
+     compare chart (it's a strict superset: picking Contribution Profit +
+     all merchants reproduces the old merchant chart exactly). Kept here,
+     commented out, per an explicit request to keep the old view retrievable
+     until there's been a chance to see the new one in use. To reinstate:
+     un-comment this block, restore #merchant-chart/#fico-chart's two
+     renderComparisonChart(...) calls in renderAll() below (the function
+     itself was never removed), and decide whether it lives alongside or
+     instead of the new compare section.
 <div class="two-col">
   <section class="panel">
     <h2>Contribution Profit by merchant</h2>
@@ -189,6 +205,29 @@
     <div id="fico-chart"></div>
   </section>
 </div>
+-->
+
+<section class="panel">
+  <h2>Compare across merchants, vintages, or FICO tiers</h2>
+  <p class="panel-note">Pick a dimension and which values to compare on one chart, and a metric. Bars for additive $ measures (they sum to a portfolio total, shown grouped/clustered per quarter -- not stacked, since these are separate entities being compared, not components of one whole); lines for rate/yield metrics (they don't sum, only compare as levels over time). Includes a computed blended total for whatever's selected, derived the same sum-then-divide way as everywhere else on this page. Reflects the Period filter above; the compared dimension's own top filter is ignored here (that's the point of comparing across it).</p>
+  <div class="compare-controls">
+    <div class="filter-field">
+      <label for="cmp-dim">Compare by</label>
+      <select id="cmp-dim">
+        <option value="m">Merchant</option>
+        <option value="v">Vintage (cohort)</option>
+        <option value="f">FICO tier</option>
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="cmp-metric">Metric</label>
+      <select id="cmp-metric"></select>
+    </div>
+  </div>
+  <div class="compare-value-picker" id="cmp-value-picker" role="group" aria-label="Values to compare"></div>
+  <div class="legend-row" id="cmp-legend"></div>
+  <div id="compare-chart"></div>
+</section>
 
 <section class="panel">
   <h2>Portfolio driver KPIs</h2>
@@ -242,8 +281,15 @@ const FORECAST_START = DATA.forecastStartIdx;
 // handled by picking the right hex map at render time and re-rendering --
 // simpler and more reliably cross-browser than routing dynamically-set SVG
 // attributes through CSS custom properties. Values match the CSS tokens above.
-const PALETTE_LIGHT = { blue: "#2a78d6", orange: "#eb6834", aqua: "#1baf7a", red: "#e34948" };
-const PALETTE_DARK = { blue: "#3987e5", orange: "#d95926", aqua: "#199e70", red: "#e66767" };
+// yellow/purple added for item 6's multi-select compare chart, which can
+// show more than the original 4 series at once -- values chosen to sit
+// visually distinct from the existing 4 in both themes.
+// muted matches the --muted CSS token (same value in both themes) --
+// reserved for the compare chart's "Blended total" series specifically, so
+// it never collides with whichever entity color happens to be first
+// (COLORS[0]/blue) among the selected values.
+const PALETTE_LIGHT = { blue: "#2a78d6", orange: "#eb6834", aqua: "#1baf7a", red: "#e34948", yellow: "#c98500", purple: "#8456ce", muted: "#898781" };
+const PALETTE_DARK = { blue: "#3987e5", orange: "#d95926", aqua: "#199e70", red: "#e66767", yellow: "#e0a53a", purple: "#a684e0", muted: "#898781" };
 function isDarkMode() {
   const attr = document.documentElement.getAttribute("data-theme");
   if (attr === "dark") return true;
@@ -298,7 +344,7 @@ function currentFilters() {
 function matchesFilter(row, f, opts) {
   opts = opts || {};
   if (!opts.skipMerchant && f.merchant !== "all" && row.m !== f.merchant) return false;
-  if (f.vintage !== "all" && row.v !== Number(f.vintage)) return false;
+  if (!opts.skipVintage && f.vintage !== "all" && row.v !== Number(f.vintage)) return false;
   if (!opts.skipFico && f.fico !== "all" && row.f !== f.fico) return false;
   if (f.scenario !== "all" && row.s !== f.scenario) return false;
   return true;
@@ -692,6 +738,175 @@ function renderDriverKpiCharts(f) {
   }
 }
 
+// ---- Multi-select compare chart (item 6) ----
+//
+// Metric registry spans both P&L buckets (DATA.rows) and the 6 driver KPIs
+// from item 7 (DATA.detail) -- `source` says which array to filter, `mark`
+// says bar (additive $, safe to sum -- these get GROUPED/clustered bars per
+// quarter, never stacked, since the compared entities are alternatives to
+// look at side by side, not components of one whole) vs. line (a rate/yield/
+// per-unit figure that doesn't sum across entities, only compares as levels).
+const METRIC_REGISTRY = {
+  gr:  { label: "Gross Revenue",         source: "rows",   mark: "bar",  fmt: fmtMoney, compute: rows => derivePnl(rows).gr },
+  cos: { label: "Cost of Sales",         source: "rows",   mark: "bar",  fmt: fmtMoney, compute: rows => derivePnl(rows).cos },
+  gp:  { label: "Gross Profit",          source: "rows",   mark: "bar",  fmt: fmtMoney, compute: rows => derivePnl(rows).grossProfit },
+  cp:  { label: "Contribution Profit",   source: "rows",   mark: "bar",  fmt: fmtMoney, compute: rows => derivePnl(rows).contributionProfit },
+  gm:  { label: "Gross Margin %",        source: "rows",   mark: "line", fmt: fmtPct,   compute: rows => derivePnl(rows).grossMarginPct },
+  cm:  { label: "Contribution Margin %", source: "rows",   mark: "line", fmt: fmtPct,   compute: rows => derivePnl(rows).contributionMarginPct },
+  paymentRate:   { label: "Payment Rate",   source: "detail", mark: "line", fmt: fmtPct,   compute: rows => deriveDriverKpis(rows).paymentRate },
+  ppaa:          { label: "PPAA",           source: "detail", mark: "line", fmt: fmtMoney, compute: rows => deriveDriverKpis(rows).ppaa },
+  activeRate:    { label: "Active Rate",    source: "detail", mark: "line", fmt: fmtPct,   compute: rows => deriveDriverKpis(rows).activeRate },
+  revolveRate:   { label: "Revolve Rate",   source: "detail", mark: "line", fmt: fmtPct,   compute: rows => deriveDriverKpis(rows).revolveRate },
+  nim:           { label: "NIM",            source: "detail", mark: "line", fmt: fmtPct,   compute: rows => deriveDriverKpis(rows).nim },
+  revenueMargin: { label: "Revenue Margin", source: "detail", mark: "line", fmt: fmtPct,   compute: rows => deriveDriverKpis(rows).revenueMargin },
+};
+
+const DIM_META = {
+  m: { skipOpt: "skipMerchant", options: () => DATA.dims.merchants.map(m => ({ value: m, label: m })) },
+  v: { skipOpt: "skipVintage", options: () => DATA.dims.vintages.map(v => ({ value: String(v.idx), label: v.label })) },
+  f: { skipOpt: "skipFico", options: () => DATA.dims.ficoBuckets.map(v => ({ value: v, label: v })) },
+};
+
+let cmpSelectedValues = new Set(); // empty = "all values in this dimension" (matches the old chart's default)
+
+function renderCmpValuePicker() {
+  const dimKey = document.getElementById("cmp-dim").value;
+  const opts = DIM_META[dimKey].options();
+  const picker = document.getElementById("cmp-value-picker");
+  picker.innerHTML = opts.map(o =>
+    `<label><input type="checkbox" value="${o.value}"${cmpSelectedValues.has(o.value) ? " checked" : ""}> ${o.label}</label>`
+  ).join("");
+  picker.querySelectorAll("input[type=checkbox]").forEach(cb => {
+    cb.addEventListener("change", () => {
+      if (cb.checked) cmpSelectedValues.add(cb.value); else cmpSelectedValues.delete(cb.value);
+      renderCompareChart(currentFilters());
+    });
+  });
+}
+
+function compareDateIdxs(seriesList, blended) {
+  const s = new Set();
+  seriesList.forEach(ser => ser.points.forEach(p => s.add(p.idx)));
+  if (blended) blended.points.forEach(p => s.add(p.idx));
+  return [...s].sort((a, b) => a - b);
+}
+
+function renderCompareChartSvg(seriesList, blended, metric) {
+  const container = document.getElementById("compare-chart");
+  container.innerHTML = "";
+  const dateIdxs = compareDateIdxs(seriesList, blended);
+  if (dateIdxs.length === 0 || seriesList.length === 0) {
+    container.innerHTML = '<p class="panel-note">No data for this selection.</p>';
+    return;
+  }
+  const dateLabel = idx => DATA.dims.reportDates.find(d => d.idx === idx).label;
+  const allSeries = blended ? seriesList.concat([blended]) : seriesList;
+
+  const W = 1080, H = 320, ML = 62, MR = 16, MT = 16, MB = 40;
+  const plotW = W - ML - MR, plotH = H - MT - MB;
+  const allVals = allSeries.flatMap(ser => ser.points.map(p => p.value)).filter(isFinite);
+  const yMax = Math.max(0, ...allVals) * 1.15 || 1;
+  const yMin = Math.min(0, ...allVals) * 1.15;
+  const x = i => ML + (dateIdxs.length === 1 ? plotW / 2 : (i / (dateIdxs.length - 1)) * plotW);
+  const y = v => MT + plotH - ((v - yMin) / (yMax - yMin || 1)) * plotH;
+
+  const svg = svgEl("svg", { class: "chart-svg", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Comparison chart" });
+
+  const seamI = dateIdxs.findIndex(idx => idx >= FORECAST_START);
+  if (seamI > 0) {
+    svg.appendChild(svgEl("rect", { class: "seam-band", x: x(seamI), y: MT, width: (W - MR) - x(seamI), height: plotH }));
+  }
+  [0.25, 0.5, 0.75, 1].forEach(frac => {
+    const v = yMin + (yMax - yMin) * frac, gy = y(v);
+    svg.appendChild(svgEl("line", { class: "gridline", x1: ML, x2: W - MR, y1: gy, y2: gy }));
+    svg.appendChild(Object.assign(svgEl("text", { x: ML - 8, y: gy + 3, "text-anchor": "end", "font-size": "10.5" }), { textContent: metric.fmt(v) }));
+  });
+  svg.appendChild(svgEl("line", { class: "axis-line", x1: ML, x2: W - MR, y1: y(0), y2: y(0) }));
+
+  const labelStep = Math.max(1, Math.ceil(dateIdxs.length / 9));
+  dateIdxs.forEach((idx, i) => {
+    if (i % labelStep === 0 || i === dateIdxs.length - 1) {
+      svg.appendChild(Object.assign(svgEl("text", { x: x(i), y: H - 14, "text-anchor": "middle", "font-size": "10.5" }), { textContent: dateLabel(idx) }));
+    }
+  });
+
+  if (metric.mark === "bar") {
+    const nSeries = allSeries.length;
+    const clusterW = (plotW / dateIdxs.length) * 0.72;
+    const barW = clusterW / nSeries;
+    dateIdxs.forEach((idx, i) => {
+      const clusterX = x(i) - clusterW / 2;
+      allSeries.forEach((ser, si) => {
+        const pt = ser.points.find(p => p.idx === idx);
+        if (!pt || !isFinite(pt.value)) return;
+        const barX = clusterX + si * barW;
+        const barY = pt.value >= 0 ? y(pt.value) : y(0);
+        const barH = Math.max(Math.abs(y(pt.value) - y(0)), 0.5);
+        svg.appendChild(svgEl("rect", { x: barX, y: barY, width: Math.max(barW - 1, 1), height: barH, fill: ser.color, opacity: ser.dashed ? 0.55 : 1 }));
+      });
+    });
+  } else {
+    allSeries.forEach(ser => {
+      const pts = ser.points.filter(p => isFinite(p.value)).map(p => `${x(dateIdxs.indexOf(p.idx))},${y(p.value)}`).join(" ");
+      const attrs = { class: "series-line", points: pts, stroke: ser.color, "stroke-width": 2 };
+      if (ser.dashed) attrs["stroke-dasharray"] = "4,3";
+      svg.appendChild(svgEl("polyline", attrs));
+      ser.points.forEach(p => {
+        if (!isFinite(p.value)) return;
+        svg.appendChild(svgEl("circle", { r: 2.5, cx: x(dateIdxs.indexOf(p.idx)), cy: y(p.value), fill: ser.color }));
+      });
+    });
+  }
+
+  container.appendChild(svg);
+}
+
+function renderCompareLegend(seriesList, blended) {
+  const legend = document.getElementById("cmp-legend");
+  const all = blended ? seriesList.concat([blended]) : seriesList;
+  legend.innerHTML = all.map(ser =>
+    `<span class="legend-item"><span class="legend-swatch" style="background:${ser.color};${ser.dashed ? "opacity:.6" : ""}"></span>${ser.label}</span>`
+  ).join("");
+}
+
+function renderCompareChart(f) {
+  const PALETTE = currentPalette();
+  const COLORS = [PALETTE.blue, PALETTE.orange, PALETTE.aqua, PALETTE.red, PALETTE.yellow, PALETTE.purple];
+
+  const dimKey = document.getElementById("cmp-dim").value;
+  const meta = DIM_META[dimKey];
+  const metric = METRIC_REGISTRY[document.getElementById("cmp-metric").value];
+  const skipOpts = { [meta.skipOpt]: true };
+
+  const allOptions = meta.options();
+  const selected = cmpSelectedValues.size > 0 ? allOptions.filter(o => cmpSelectedValues.has(o.value)) : allOptions;
+  const typedValue = v => (dimKey === "v" ? Number(v) : v);
+
+  const sourceRows = DATA[metric.source];
+  const seriesList = selected.map((o, i) => {
+    const rows = sourceRows.filter(r => matchesFilter(r, f, skipOpts) && r[dimKey] === typedValue(o.value));
+    const byDate = groupBy(rows, r => r.r);
+    const points = [...byDate.keys()].sort((a, b) => a - b).map(idx => ({
+      idx, value: metric.compute(byDate.get(idx)),
+    }));
+    return { label: o.label, color: COLORS[i % COLORS.length], points };
+  });
+
+  let blended = null;
+  if (selected.length > 1) {
+    const typedValues = selected.map(o => typedValue(o.value));
+    const rows = sourceRows.filter(r => matchesFilter(r, f, skipOpts) && typedValues.includes(r[dimKey]));
+    const byDate = groupBy(rows, r => r.r);
+    const points = [...byDate.keys()].sort((a, b) => a - b).map(idx => ({
+      idx, value: metric.compute(byDate.get(idx)),
+    }));
+    blended = { label: "Blended total", color: PALETTE.muted, dashed: true, points };
+  }
+
+  renderCompareChartSvg(seriesList, blended, metric);
+  renderCompareLegend(seriesList, blended);
+}
+
 function renderFilterSummary(f) {
   const parts = [];
   parts.push(f.merchant === "all" ? "All merchants" : f.merchant);
@@ -706,8 +921,7 @@ function renderAll() {
   renderFilterSummary(f);
   renderKpiTiles(f);
   renderTrendChart(f);
-  renderComparisonChart("merchant-chart", "m", DATA.dims.merchants.map(m => ({value: m, label: m})), f, { skipMerchant: true });
-  renderComparisonChart("fico-chart", "f", DATA.dims.ficoBuckets.map(v => ({value: v, label: v})), f, { skipFico: true });
+  renderCompareChart(f);
   renderDriverKpiCharts(f);
   renderTable(f);
   const detailToggle = document.getElementById("detail-toggle");
@@ -717,6 +931,20 @@ function renderAll() {
 document.getElementById("detail-toggle").addEventListener("toggle", (e) => {
   if (e.target.open) renderDetailTable(currentFilters());
 });
+
+// Compare-chart controls: metric list populated once from the registry;
+// the value picker repopulates (and selection resets to "all") whenever the
+// compared dimension changes, since the checkbox set itself is different.
+document.getElementById("cmp-metric").innerHTML = Object.entries(METRIC_REGISTRY)
+  .map(([k, m]) => `<option value="${k}">${m.label}</option>`).join("");
+document.getElementById("cmp-metric").value = "cp";
+document.getElementById("cmp-dim").addEventListener("change", () => {
+  cmpSelectedValues = new Set();
+  renderCmpValuePicker();
+  renderAll();
+});
+document.getElementById("cmp-metric").addEventListener("change", renderAll);
+renderCmpValuePicker();
 
 [els.merchant, els.vintage, els.fico, els.scenario].forEach(el => el.addEventListener("change", renderAll));
 document.getElementById("reset-filters").addEventListener("click", () => {
