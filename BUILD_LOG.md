@@ -578,3 +578,125 @@ stated, with one added nuance — call it an 8-merchant pattern (all
 FICO-specific merchants show it, magnitude consistently 8x-12x), not a
 literal 10-merchant one, since Merchants 9/10's rate curves don't
 differentiate by FICO tier at all.
+
+---
+
+## Day 2 — Seasonality (2026-08-26)
+
+The forecast engine indexes purely by QSB (cohort age) — there was no
+calendar-quarter notion anywhere in the curve/rate library, so a real Q4
+holiday spend spike or Q1 paydown dip would either be invisible to the model
+or smeared into the age-based curve. Per the TODO's own instruction: confirm
+the pattern is real and material *before* designing a fix.
+
+**New diagnostic**: `scripts/14_seasonality_analysis.py`. Method: index each
+cohort's own Net Transaction Volume series to its own QSB=0 value (removes
+cohort size), divide by a pooled expected age-curve at that QSB (removes
+age), collapse to one weighted-average residual per *actual calendar
+quarter* (not per cohort-row — cohorts alive in the same calendar quarter
+aren't independent trials, so testing at row-level would be
+pseudo-replicated), then group those ~13 points by quarter-of-year.
+Materiality threshold (swing > 7%, >= 50% of merchants with >= 8 actual
+quarters agreeing on the peak quarter) was set before looking at results.
+
+**Verdict: material and reliable, by a wide margin.**
+
+| Quarter-of-year | Mean residual (index, 1.0 = age-curve-expected) | n |
+|---|---|---|
+| Q1 | 0.682 | 3 |
+| Q2 | 1.051 | 4 |
+| Q3 | 1.128 | 3 |
+| Q4 | 1.537 | 3 |
+
+An 85% peak-to-trough swing, and — more convincing than the pooled number
+alone — **all 5 merchants with enough history to check (Merchants 1-5) agree
+Q4 is the peak and Q1 the trough**, a clean monotonic Q1→Q2→Q3→Q4 shape in
+every one of them. This matches the obvious business-logic prior for a
+consumer card portfolio (Q4 holiday spending surge, Q1 post-holiday paydown
+dip) closely enough, and is consistent enough across independent merchants,
+that it reads as a real effect rather than noise or a detrending artifact —
+even though the underlying sample (~3-4 calendar-quarter-of-year
+observations per bucket, ~4 years of history) is genuinely thin and this
+should be stated as such whenever the seasonal curve comes up.
+
+**Implemented**: two-factor decomposition, `driver(QSB, quarter) =
+f(QSB) x s(quarter_of_year)`, layered on top of the existing engine rather
+than redesigning it (the TODO's own recommended approach given the thin
+sample, and the one used here).
+- `scripts/04_curve_library.py`: `build_seasonal_index()` — same
+  detrend-and-residual method as the diagnostic script (independently
+  re-implemented, not shared code), pooled across **all** merchants (not
+  per-merchant — splitting an already-thin ~4-per-bucket sample further
+  isn't defensible), normalized so the 4 multipliers average to 1.0 (reshapes
+  the year without changing the annual total), clipped to **[0.5, 1.6]**.
+  This clip band is deliberately wider than the ±20%-style guard used
+  elsewhere in this codebase (e.g. `FACTOR_CLIP`) — that generic band exists
+  to suppress a *noisy, thin* estimate toward 1.0; this estimate is unusually
+  strong and cross-merchant-consistent, so a tight clip would have actively
+  suppressed a real signal rather than guarded against a fake one. The actual
+  estimated multipliers (0.620 / 0.956 / 1.026 / 1.398) sit comfortably
+  inside the band unclipped.
+- `scripts/05_forecast_engine.py`: applied **only** to Net Transaction Volume
+  (it's the Driver Basis for 7 of the 16 Rate-Derived line items —
+  Interchange, MDR, Rewards, Royalties, Rebates, Payment Fees, 3rd Party
+  Fraud — so the signal propagates into all of them automatically; applying
+  it again on those rate-derived lines would double-count), and **only** on
+  forecast-period rows (actuals already contain real seasonality — they're
+  never touched). For backbook cohorts (rolling an existing cohort's real
+  last-actual value forward), each QSB-advancing step gets multiplied by
+  `s(destination quarter) / s(source quarter)` — this specifically
+  normalizes away whatever real seasonal level the anchor observation already
+  carried (e.g. an anchor observed in an actual Q4 shouldn't get Q4's boost
+  applied a second time) and replaces it with the correct target-quarter
+  level; the per-step ratios telescope correctly regardless of how many QSB
+  steps a cohort takes. For frontbook cohorts (brand-new, sized off trailing
+  growth trend), the QSB=0 baseline is multiplied directly by
+  `s(launch quarter)`, since the seed ratio it's built from already pools
+  across vintages launched in every calendar quarter and is itself close to
+  seasonality-neutral.
+- `scripts/08_audit.py`: new **Check G** — independently re-derives the same
+  4 multipliers from raw actuals (separate code path, not imported) and
+  confirms they match what shipped, sit inside the clip band, and average to
+  exactly 1.0. **PASS.**
+
+**Impact**: full pipeline rerun end-to-end. The forecast now shows a visible
+Q4-peak/Q1-dip saw-tooth quarter to quarter (e.g. Q4 2026 Gross Revenue
+$165.0M vs. the adjacent Q1 2027's $141.6M) that the pre-seasonality
+forecast smoothed away entirely. Headline annual totals barely moved, as
+designed (the 4 multipliers average to 1.0, so reshaping within a year
+doesn't change the year's sum) — small residual drift comes from second-order
+interactions (seasonally-adjusted NTV feeding into frontbook sizing and
+downstream rate-derived lines across quarter boundaries), not from a level
+shift:
+
+| Figure | Before | After |
+|---|---|---|
+| Gross Revenue (8Q forecast) | $1.500B | $1.502B |
+| Gross Profit / margin | $198.6M / 13.3% | $198.1M / 13.2% |
+| Contribution Profit / margin | $170.8M / 11.4% | $170.3M / 11.3% |
+| Portfolio LTV/CAC | 0.75x | 0.75x |
+
+**Caveat for the debrief**: this is a real, cross-merchant-consistent signal,
+but it's estimated from only ~4 years of history — treat the specific
+multiplier values (especially the 1.40x Q4 peak) as directionally right, not
+precision-fitted, and say so if asked. `output/seasonality_quarter_of_year_residuals.csv`
+and `output/curve_seasonal_index.csv` have the full detail.
+
+**Known scope gap, surfaced honestly rather than hidden**: seasonality was
+applied to Net Transaction Volume only, not to Outstanding Balance or other
+balance/stock drivers — that's a real internal inconsistency, not an
+oversight. `08_audit.py`'s Check B (roll-forward identity, already a known,
+explained FAIL) makes this visible on its own: the continuing-cohort gap
+that check flags stays under 1.5% throughout the actuals period (untouched
+by this change) but widens to as much as ~24% specifically in forecast
+quarters with the largest seasonal swings (Q4 peak, Q1 trough) — because NTV
+now moves ±40% by calendar quarter while Outstanding Balance still rolls
+forward on its own smooth, non-seasonal curve. In reality, Outstanding
+Balance almost certainly has its own real seasonality (post-holiday balance
+buildup and paydown is a well-known card-portfolio pattern) — extending the
+same two-factor treatment to Outstanding Balance (and possibly Revolve
+Balance) would be the natural next increment, deliberately left out of scope
+here to keep the Day 2 fix layered and contained rather than touching every
+balance-driven line item at once. Check B's audit message now reports the
+actuals-vs-forecast split explicitly so this doesn't read as a regression if
+someone reruns the audit and sees the number moved.

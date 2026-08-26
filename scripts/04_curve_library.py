@@ -136,6 +136,69 @@ def build_pooled_tail_rates(rate_curves: pd.DataFrame) -> pd.DataFrame:
     return pooled
 
 
+SEASONAL_CLIP = (0.5, 1.6)  # Backstop against a pathological result -- wider than the +/-20%
+# a generic anti-overfitting guard would use, because the empirical signal here is unusually
+# strong and consistent (85% Q1-to-Q4 swing, 100% of the 5 merchants with >= 8 actual quarters
+# agree Q4 is the peak / Q1 the trough -- see scripts/14_seasonality_analysis.py and BUILD_LOG.md
+# "Day 2 -- Seasonality"), not a thin/noisy estimate that calls for suppressing toward 1.0.
+
+
+def build_seasonal_index(df: pd.DataFrame) -> pd.DataFrame:
+    """Two-factor decomposition: driver(QSB, quarter) = f(QSB) x s(quarter_of_year).
+    s() is estimated from Net Transaction Volume residuals after removing the
+    existing QSB-based age curve (NTV is the Driver Basis for 7 of the 16
+    Rate-Derived line items, so a signal found here propagates automatically
+    without re-deriving it 7 times -- see 05_forecast_engine.py for how it's
+    applied downstream). Confirmed material and reliable by
+    scripts/14_seasonality_analysis.py before this function was written --
+    see that script and BUILD_LOG.md for the full investigation (this isn't a
+    build-first-check-later shortcut).
+
+    Method: index each cohort's own NTV series to its own QSB=0 value (removes
+    cohort size), divide by a pooled expected age-curve at that QSB (removes
+    age), collapse to ONE weighted-average residual per actual calendar
+    quarter (not per cohort-row -- cohorts alive in the same calendar quarter
+    aren't independent trials), then average those ~14 points by
+    quarter-of-year. Pooled across ALL merchants, not per-merchant -- only
+    ~4 years of history means at most ~3-4 independent observations per
+    quarter-of-year bucket even pooled; splitting further by merchant would
+    make an already-thin estimate thinner still.
+
+    Normalized so the 4 multipliers average to 1.0 -- applied evenly across a
+    full forecast year, this reshapes the distribution across quarters without
+    changing the annualized total (checked independently in 08_audit.py).
+    """
+    ntv = df[(df["Line Item"] == "Net Transaction Volume") & (df["Model Role"] == "Driver")]
+    cohort = ntv.groupby(["Merchant", "Vintage Index", "QSB"])["Value"].sum().reset_index()
+
+    qsb0 = cohort[cohort["QSB"] == 0].set_index(["Merchant", "Vintage Index"])["Value"].rename("qsb0_value")
+    normalized = cohort.merge(qsb0, on=["Merchant", "Vintage Index"], how="left")
+    normalized = normalized[normalized["qsb0_value"] > 0]
+    normalized["index_val"] = normalized["Value"] / normalized["qsb0_value"]
+
+    w = normalized.copy()
+    w["weighted"] = w["index_val"] * w["qsb0_value"]
+    age_curve = w.groupby("QSB").agg(weighted_sum=("weighted", "sum"), weight_sum=("qsb0_value", "sum"))
+    age_curve["expected_index"] = age_curve["weighted_sum"] / age_curve["weight_sum"]
+
+    normalized = normalized.merge(age_curve["expected_index"], on="QSB", how="left")
+    normalized = normalized[normalized["QSB"] > 0]  # QSB=0 residual is trivially 1.0 by construction
+    normalized["residual"] = normalized["index_val"] / normalized["expected_index"]
+    normalized["Report Date Index"] = normalized["Vintage Index"] + normalized["QSB"]
+    normalized["quarter_of_year"] = normalized["Report Date Index"] % 4
+
+    w2 = normalized.copy()
+    w2["weighted"] = w2["residual"] * w2["qsb0_value"]
+    by_report_date = w2.groupby("Report Date Index").agg(weighted_sum=("weighted", "sum"), weight_sum=("qsb0_value", "sum"))
+    by_report_date["avg_residual"] = by_report_date["weighted_sum"] / by_report_date["weight_sum"]
+    by_report_date["quarter_of_year"] = by_report_date.index % 4
+
+    by_qoy = by_report_date.groupby("quarter_of_year")["avg_residual"].mean()
+    by_qoy = by_qoy / by_qoy.mean()
+    by_qoy = by_qoy.clip(*SEASONAL_CLIP)
+    return by_qoy.rename("seasonal_index").reset_index()
+
+
 def build_rate_curves(df: pd.DataFrame, classification: pd.DataFrame) -> pd.DataFrame:
     """Rate = line item value / its Driver Basis value, at (Merchant, Grain
     FICO, QSB) grain, ratio-of-sums (volume weighted). Built for every
@@ -199,6 +262,10 @@ def main():
     dev_factors = build_development_factors(df)
     dev_factors.to_csv(OUT_DIR / "curve_dev_factors.csv", index=False)
     print(f"Development factors: {len(dev_factors)} rows -> curve_dev_factors.csv")
+
+    seasonal_index = build_seasonal_index(df)
+    seasonal_index.to_csv(OUT_DIR / "curve_seasonal_index.csv", index=False)
+    print(f"Seasonal index (NTV, quarter-of-year, 0=Q1..3=Q4): {seasonal_index['seasonal_index'].round(3).tolist()} -> curve_seasonal_index.csv")
 
     pooled_tail_factors = build_pooled_tail_factors(dev_factors)
     pooled_tail_factors.to_csv(OUT_DIR / "curve_pooled_tail_factors.csv", index=False)

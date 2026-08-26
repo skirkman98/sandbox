@@ -56,6 +56,16 @@ FICO_BUCKETS = ["Exceptional (800-850)", "Very Good (740-799)", "Good (670-739)"
 TREND_LOOKBACK_QUARTERS = 4
 GROWTH_CAP = 0.25  # cap trailing-quarter growth rate applied per forecast quarter, +/-25%
 
+# Seasonality (Day 2 TODO item 1): applied ONLY to this driver, ONLY on
+# forecast-period rows -- see build_seasonal_index() in 04_curve_library.py
+# for how the 4 quarter-of-year multipliers are estimated, and BUILD_LOG.md
+# "Day 2 -- Seasonality" for why NTV alone is sufficient (it's the Driver
+# Basis for 7 of the 16 Rate-Derived line items, so the signal propagates
+# into Interchange/MDR/Rewards/Royalties/Rebates/Payment Fees/Fraud
+# automatically without being applied to each of them separately -- doing so
+# WOULD double-count).
+SEASONAL_LINE_ITEM = "Net Transaction Volume"
+
 
 def load_all():
     actuals = pd.read_parquet(OUT_DIR / "clean_actuals_grained.parquet")
@@ -67,7 +77,23 @@ def load_all():
     classification = pd.read_csv(DATA_DIR / "line_item_classification.csv")
     pooled_tail_factors = pd.read_csv(OUT_DIR / "curve_pooled_tail_factors.csv")
     pooled_tail_rates = pd.read_csv(OUT_DIR / "curve_pooled_tail_rates.csv")
-    return actuals, dev_factors, seeds, rate_curves, acq_rates, pooled, classification, pooled_tail_factors, pooled_tail_rates
+    seasonal_index = pd.read_csv(OUT_DIR / "curve_seasonal_index.csv").set_index("quarter_of_year")["seasonal_index"].to_dict()
+    return (actuals, dev_factors, seeds, rate_curves, acq_rates, pooled, classification,
+            pooled_tail_factors, pooled_tail_rates, seasonal_index)
+
+
+def seasonal_step_ratio(seasonal_index: dict, dest_report_idx: int) -> float:
+    """Ratio of the destination quarter's seasonal multiplier to the
+    immediately-prior quarter's. Multiplying by this at EVERY QSB-advancing
+    step is mathematically equivalent (telescopes) to applying
+    s(dest)/s(anchor) once at the first forecast step -- but composes
+    correctly regardless of how many steps a given loop takes, and correctly
+    normalizes away whatever real seasonal level the anchor (a real actual
+    observation, for backbook cohorts) already happened to carry, replacing
+    it with the model's typical seasonal level for the destination quarter
+    instead of stacking a second seasonal effect on top of the first."""
+    dest_q, src_q = dest_report_idx % 4, (dest_report_idx - 1) % 4
+    return seasonal_index[dest_q] / seasonal_index[src_q]
 
 
 def grain_fico_for(merchant, fico, pooled_merchants):
@@ -187,7 +213,7 @@ def project_new_accounts(actuals: pd.DataFrame) -> pd.DataFrame:
 # Driver forecasting (backbook + frontbook, unified)
 # ---------------------------------------------------------------------------
 
-def forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook, pooled_merchants, classification, pooled_tail_factors=None):
+def forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook, pooled_merchants, classification, pooled_tail_factors=None, seasonal_index=None):
     driver_items = classification[classification["Model Role"] == "Driver"]["Line Item"].tolist()
     out_rows = []
 
@@ -222,6 +248,10 @@ def forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook
                 for qsb_from in range(last_actual_qsb, target_qsb):
                     factor = get_factor(factor_lookup, li, merchant, gfico, qsb_from, pooled_tail_factors)
                     value *= factor
+                    if seasonal_index is not None and li == SEASONAL_LINE_ITEM:
+                        dest_report_idx = vintage_idx + qsb_from + 1
+                        if dest_report_idx >= FORECAST_START_IDX:
+                            value *= seasonal_step_ratio(seasonal_index, dest_report_idx)
                 out_rows.append({
                     "Merchant": merchant, "Vintage Index": vintage_idx, "FICO Bucket": fico,
                     "Report Date Index": report_idx, "QSB": target_qsb, "Line Item": li, "Value": value,
@@ -246,6 +276,13 @@ def forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook
             if seed_ratio is None:
                 continue
             value = seed_ratio * new_accts
+            if seasonal_index is not None and li == SEASONAL_LINE_ITEM:
+                # No real anchor to normalize away here (unlike backbook) --
+                # seed_ratio itself already pools across vintages launched in
+                # every calendar quarter, so it's already close to a
+                # seasonality-neutral baseline. Apply the target quarter's
+                # multiplier directly.
+                value *= seasonal_index[vintage_idx % 4]
             out_rows.append({
                 "Merchant": merchant, "Vintage Index": vintage_idx, "FICO Bucket": fico,
                 "Report Date Index": vintage_idx, "QSB": 0, "Line Item": li, "Value": value,
@@ -256,6 +293,8 @@ def forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook
                 target_qsb = report_idx - vintage_idx
                 factor = get_factor(factor_lookup, li, merchant, gfico, qsb_cursor, pooled_tail_factors)
                 value *= factor
+                if seasonal_index is not None and li == SEASONAL_LINE_ITEM:
+                    value *= seasonal_step_ratio(seasonal_index, report_idx)
                 out_rows.append({
                     "Merchant": merchant, "Vintage Index": vintage_idx, "FICO Bucket": fico,
                     "Report Date Index": report_idx, "QSB": target_qsb, "Line Item": li, "Value": value,
@@ -341,7 +380,9 @@ def index_to_quarter(idx: int) -> str:
 
 
 def main():
-    actuals, dev_factors, seeds, rate_curves, acq_rates, pooled, classification, pooled_tail_factors_df, pooled_tail_rates_df = load_all()
+    (actuals, dev_factors, seeds, rate_curves, acq_rates, pooled, classification,
+     pooled_tail_factors_df, pooled_tail_rates_df, seasonal_index) = load_all()
+    print(f"Seasonal index loaded (0=Q1..3=Q4): {seasonal_index}")
 
     factor_lookup = build_factor_lookup(dev_factors)
     rate_lookup = build_rate_lookup(rate_curves)
@@ -356,7 +397,7 @@ def main():
     print(new_accounts_frontbook.groupby("Merchant")["growth_rate_applied"].first().to_string())
 
     print("\nForecasting drivers (backbook + frontbook)...")
-    driver_forecast = forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook, pooled, classification, pooled_tail_factors)
+    driver_forecast = forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook, pooled, classification, pooled_tail_factors, seasonal_index)
     print(f"  {len(driver_forecast):,} driver forecast rows")
 
     print("Forecasting rate-derived $ lines...")

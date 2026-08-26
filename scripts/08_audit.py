@@ -140,6 +140,24 @@ def check_b_rollforward_identity():
     this quarter's new originations) reconciles to a <1% residual in the
     actuals period. This decomposition is now built into the check directly,
     replacing the earlier "informational, not root-caused" framing.
+
+    Day 2 addendum: the continuing-cohort gap is now visibly larger in
+    FORECAST-period quarters than actuals (still <1.5% in actuals, up to
+    ~24% in forecast quarters) since 04/05 added quarter-of-year seasonality
+    to Net Transaction Volume only (see BUILD_LOG.md "Day 2 -- Seasonality")
+    -- Outstanding Balance still rolls forward on its own smooth,
+    non-seasonal development-factor curve. NTV now swings +/-40% by calendar
+    quarter while OS doesn't move in tandem, so this identity (which sums
+    NTV into the balance roll-forward) necessarily gaps wider specifically in
+    the highest-seasonal-swing quarters -- confirmed below by breaking the
+    max gap out separately for actuals vs. forecast. This is a real,
+    understood consequence of scoping the seasonality fix to NTV only (chosen
+    to keep the change layered and avoid redesigning the whole driver
+    library), not a new bug -- but it's an honest flag that Outstanding
+    Balance (and other balance/stock drivers) likely have their own real
+    seasonality that this build does not yet model, and a more complete
+    seasonality pass would need to extend to them for full internal
+    consistency.
     """
     df = pd.read_parquet(OUT_DIR / "combined_actuals_forecast.parquet")
 
@@ -180,8 +198,12 @@ def check_b_rollforward_identity():
         beginning = os_all.loc[prev_idx]  # last quarter's total balance is this quarter's continuing-cohort starting point
         implied = beginning + ntv_continuing.get(idx, 0) + pp_continuing.get(idx, 0) + co_continuing.get(idx, 0)
         actual = os_continuing.loc[idx]
-        cont_gaps.append(abs(implied - actual) / actual if actual else 0)
-    max_gap_continuing = max(cont_gaps) if cont_gaps else float("nan")
+        cont_gaps.append((idx, abs(implied - actual) / actual if actual else 0))
+    cont_gaps_df = pd.DataFrame(cont_gaps, columns=["Report Date Index", "gap_pct"])
+    max_gap_continuing = cont_gaps_df["gap_pct"].max() if len(cont_gaps_df) else float("nan")
+    actuals_mask = cont_gaps_df["Report Date Index"] < FORECAST_START_IDX
+    max_gap_continuing_actuals = cont_gaps_df.loc[actuals_mask, "gap_pct"].max() if actuals_mask.any() else float("nan")
+    max_gap_continuing_forecast = cont_gaps_df.loc[~actuals_mask, "gap_pct"].max() if (~actuals_mask).any() else float("nan")
 
     # This is a QA/consistency check, not a hard constraint on the model --
     # the whole-portfolio version stays FAIL-eligible (it's a real, if
@@ -190,8 +212,11 @@ def check_b_rollforward_identity():
     record(
         "B. Roll-forward identity (Beginning + NTV + Payments + ChargeOffs vs. Ending OS)",
         status,
-        f"max gap {max_gap:.1%} whole-portfolio, but only {max_gap_continuing:.1%} for continuing (QSB>=1) cohorts -- "
-        f"the gap is explained by new-cohort originations carrying balance beyond their own NTV, not a modeling error",
+        f"max gap {max_gap:.1%} whole-portfolio, {max_gap_continuing:.1%} for continuing (QSB>=1) cohorts overall "
+        f"({max_gap_continuing_actuals:.1%} in actuals, {max_gap_continuing_forecast:.1%} in forecast quarters -- "
+        f"the forecast-period widening vs. actuals is the expected consequence of Day 2's NTV-only seasonality, see "
+        f"this function's docstring) -- the underlying gap itself is explained by new-cohort originations carrying "
+        f"balance beyond their own NTV, not a modeling error",
     )
     return gaps_df
 
@@ -408,6 +433,67 @@ def check_f_independent_trend():
     )
 
 
+# ---------------------------------------------------------------------------
+# Check G: seasonal index sanity (Day 2 TODO item 1)
+# ---------------------------------------------------------------------------
+
+SEASONAL_CLIP = (0.5, 1.6)  # must match 04_curve_library.py's SEASONAL_CLIP -- checked independently below
+
+
+def check_g_seasonal_index():
+    """Independently re-derives the quarter-of-year seasonal index for Net
+    Transaction Volume (same method as 04_curve_library.py's
+    build_seasonal_index -- re-implemented here, not imported) and checks
+    two things: (1) the shipped curve_seasonal_index.csv matches this
+    independent recompute, and (2) every multiplier sits inside the declared
+    clip band and the four multipliers average to ~1.0 -- i.e. the seasonal
+    adjustment reshapes the distribution across quarters without changing the
+    annualized total, rather than silently inflating/deflating the year."""
+    df = pd.read_parquet(OUT_DIR / "clean_actuals_grained.parquet")
+    ntv = df[(df["Line Item"] == "Net Transaction Volume") & (df["Model Role"] == "Driver")]
+    cohort = ntv.groupby(["Merchant", "Vintage Index", "QSB"])["Value"].sum().reset_index()
+
+    qsb0 = cohort[cohort["QSB"] == 0].set_index(["Merchant", "Vintage Index"])["Value"].rename("qsb0_value")
+    normalized = cohort.merge(qsb0, on=["Merchant", "Vintage Index"], how="left")
+    normalized = normalized[normalized["qsb0_value"] > 0]
+    normalized["index_val"] = normalized["Value"] / normalized["qsb0_value"]
+
+    w = normalized.copy()
+    w["weighted"] = w["index_val"] * w["qsb0_value"]
+    age_curve = w.groupby("QSB").agg(weighted_sum=("weighted", "sum"), weight_sum=("qsb0_value", "sum"))
+    age_curve["expected_index"] = age_curve["weighted_sum"] / age_curve["weight_sum"]
+
+    normalized = normalized.merge(age_curve["expected_index"], on="QSB", how="left")
+    normalized = normalized[normalized["QSB"] > 0]
+    normalized["residual"] = normalized["index_val"] / normalized["expected_index"]
+    normalized["Report Date Index"] = normalized["Vintage Index"] + normalized["QSB"]
+    normalized["quarter_of_year"] = normalized["Report Date Index"] % 4
+
+    w2 = normalized.copy()
+    w2["weighted"] = w2["residual"] * w2["qsb0_value"]
+    by_report_date = w2.groupby("Report Date Index").agg(weighted_sum=("weighted", "sum"), weight_sum=("qsb0_value", "sum"))
+    by_report_date["avg_residual"] = by_report_date["weighted_sum"] / by_report_date["weight_sum"]
+    by_report_date["quarter_of_year"] = by_report_date.index % 4
+
+    recomputed = by_report_date.groupby("quarter_of_year")["avg_residual"].mean()
+    recomputed = (recomputed / recomputed.mean()).clip(*SEASONAL_CLIP)
+
+    shipped = pd.read_csv(OUT_DIR / "curve_seasonal_index.csv").set_index("quarter_of_year")["seasonal_index"]
+    max_diff = (recomputed - shipped).abs().max()
+
+    out_of_band = shipped[(shipped < SEASONAL_CLIP[0]) | (shipped > SEASONAL_CLIP[1])]
+    annual_mean = shipped.mean()
+
+    status = PASS if (max_diff < 1e-6 and out_of_band.empty and abs(annual_mean - 1.0) < 1e-6) else FAIL
+    record(
+        "G. Seasonal index sanity (independent recompute, clip band, annualized-total-neutral)",
+        status,
+        f"max diff vs. independent recompute: {max_diff:.6f}; {len(out_of_band)} multiplier(s) outside "
+        f"[{SEASONAL_CLIP[0]}, {SEASONAL_CLIP[1]}]; 4-quarter mean: {annual_mean:.4f} (should be 1.0000); "
+        f"shipped values: {shipped.round(3).to_dict()}",
+    )
+
+
 def main():
     print("=" * 70)
     print("INDEPENDENT AUDIT -- recomputed via separate code paths from source")
@@ -418,6 +504,7 @@ def main():
     check_d_cac_sanity()
     check_e_ltv_sanity()
     check_f_independent_trend()
+    check_g_seasonal_index()
 
     print("\n" + "=" * 70)
     n_fail = sum(1 for _, status, _ in results if status == FAIL)
