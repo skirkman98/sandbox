@@ -386,3 +386,47 @@ correct negative Contribution Profit (-$14.2M) and LTV/CAC (-0.19x, matching
 `ltv_cac_by_merchant.csv` exactly); cross-navigation between all three HTML
 documents works. The pitch deck's inline SVG architecture diagrams also render
 cleanly.
+
+---
+
+## Narrative rebuild: slides, real charts, and dark mode everywhere
+
+The narrative document was rebuilt from scratch (`09_build_narrative_deck.py`,
+replacing `09_build_report.py`) as a slide-format financial story rather than
+a single continuous page: each slide makes one point in order (today's book →
+the forecast → how the book is aging → what cohort curves reveal → the
+FICO-tier LTV/CAC finding → merchant winners/drags → the risks), backed by a
+chart, following Shneiderman's "overview, then the story beat" logic rather
+than a reference-document layout.
+
+**Charts moved from matplotlib PNGs to static inline SVG, specifically to
+support dark mode.** A raster PNG bakes in one theme's colors at render time —
+it can't re-color itself for a dark background without a second render. SVG
+shapes styled via `style="fill:var(--blue)"` (a CSS custom property, not a
+hardcoded hex attribute) pick up whichever theme is active automatically, no
+regeneration needed. All three documents now use this pattern: dashboard.html
+re-renders its JS-driven SVG on theme toggle (it already re-renders on every
+filter change, so this added no new mechanism); the pitch deck's diagrams and
+the narrative deck's charts are static SVG that re-color for free via CSS
+alone.
+
+**A real legibility bug, caught by looking at the actual rendered chart, not
+just checking it built without errors.** The trend chart's Gross Profit and
+Contribution Profit lines end close together in value — their direct
+end-labels rendered on top of each other, illegible. Fixed with a small greedy
+vertical-separation pass (sort labels by y-position, enforce a minimum pixel
+gap, nudge down as needed) applied to both multi-series chart types. A
+reminder that "no console errors" and "no rendering errors" are not the same
+as "actually readable" — this one only showed up in a screenshot.
+
+**Dark mode**: added to all three documents as CSS custom properties with
+three states (explicit `data-theme` attribute, `prefers-color-scheme` media
+query, and a light-mode default), matching the pattern of assigning a token
+once and letting every consumer — chart, chip, table border — reference it
+rather than hardcoding hex. Colors are the dataviz reference palette's
+documented dark-mode steps, not ad hoc darkened values. A toggle button
+(top-right, all three pages) persists the choice to `localStorage` and
+overrides the OS preference; visually confirmed in both themes via the same
+browser-driven check as above, including the toggle actually flipping the
+theme and dashboard.html's charts re-rendering with the correct dark-mode hex
+values.

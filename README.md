@@ -4,14 +4,17 @@ A driver-based forecasting model for 10 credit-card merchant programs, built fro
 ~67K-row vintage-triangle dataset, rolled up into a consolidated 8-quarter
 Management P&L (Q3 2026–Q2 2028).
 
-**Three outputs, three audiences:**
+**Three outputs, three audiences — all with light/dark mode (toggle top-right,
+defaults to system preference):**
 - [`output/dashboard.html`](output/dashboard.html) — **the primary executive
   reporting tool.** Rolled-up Management P&L with live filters by Merchant,
   Vintage, and FICO tier, KPI tiles, comparison charts, and a data table. Built
   for ongoing reporting and ad hoc analysis, not a one-time snapshot.
-- [`output/narrative_report.html`](output/narrative_report.html) — the full
-  written story: cohort views, LTV/CAC by FICO with the explanation of *why*
-  it's inverted, merchant winners/drags, and the audit results.
+- [`output/narrative_report.html`](output/narrative_report.html) — the
+  financial story, told progressively in slides: where the book stands today,
+  where it's headed, how it's aging, what cohort curves reveal, the FICO-tier
+  LTV/CAC finding, merchant winners/drags, and the risks — each slide makes
+  one point, backed by a chart.
 - [`output/pitch_deck.html`](output/pitch_deck.html) — how the model was
   built: architecture, core assumptions, the bugs found and fixed along the
   way, and the independent audit trail. Presentation-style, a few minutes to
@@ -33,7 +36,7 @@ python3 scripts/05_forecast_engine.py         # backbook + frontbook forecast
 python3 scripts/06_pnl_rollup.py              # consolidated P&L + cohort LTV/CAC
 python3 scripts/07_cohort_views.py            # cohort-level views
 python3 scripts/08_audit.py                   # independent audit, separate code paths
-python3 scripts/09_build_narrative_report.py  # narrative_report.html
+python3 scripts/09_build_narrative_deck.py    # narrative_report.html (the financial story, in slides)
 python3 scripts/10_export_dashboard_data.py   # aggregates data for the dashboard
 python3 scripts/11_build_dashboard.py         # dashboard.html
 python3 scripts/12_build_pitch_deck.py        # pitch_deck.html

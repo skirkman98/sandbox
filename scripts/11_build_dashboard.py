@@ -43,10 +43,32 @@ HTML_TEMPLATE = r"""<!doctype html>
 <meta charset="utf-8">
 <title>Imprint Management P&amp;L Dashboard</title>
 <style>
+  /* Light palette (default). Dark redefines the same tokens below -- see the
+     data-visualization skill's dark-mode pattern: an explicit data-theme
+     wins over the OS media query, which wins over this default. Never a
+     token defined only inside a media/data-theme block. */
   :root {
+    color-scheme: light;
     --blue: #2a78d6; --orange: #eb6834; --aqua: #1baf7a; --yellow: #eda100; --red: #e34948;
     --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781; --grid: #e1e0d9;
     --surface: #fcfcfb; --page: #f9f9f7; --border: rgba(11,11,11,0.10);
+    --select-bg: #ffffff; --baseline: #c3c2b7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --blue: #3987e5; --orange: #d95926; --aqua: #199e70; --yellow: #c98500; --red: #e66767;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781; --grid: #2c2c2a;
+      --surface: #1a1a19; --page: #0d0d0d; --border: rgba(255,255,255,0.10);
+      --select-bg: #232322; --baseline: #383835;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --blue: #3987e5; --orange: #d95926; --aqua: #199e70; --yellow: #c98500; --red: #e66767;
+    --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781; --grid: #2c2c2a;
+    --surface: #1a1a19; --page: #0d0d0d; --border: rgba(255,255,255,0.10);
+    --select-bg: #232322; --baseline: #383835;
   }
   * { box-sizing: border-box; }
   body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--page); color: var(--ink); margin: 0; }
@@ -54,14 +76,16 @@ HTML_TEMPLATE = r"""<!doctype html>
   header.page-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem; }
   h1 { font-size: 1.55rem; margin: 0; }
   .subtitle { color: var(--ink-2); margin: 0.15rem 0 1.25rem; }
-  nav.doc-links { font-size: 0.85rem; }
+  nav.doc-links { font-size: 0.85rem; display: flex; align-items: center; gap: 0.25rem; }
   nav.doc-links a { color: var(--blue); text-decoration: none; margin-left: 1rem; }
   nav.doc-links a:hover { text-decoration: underline; }
+  button.theme-toggle { margin-left: 1.1rem; font-size: 0.85rem; background: var(--surface); border: 1px solid var(--grid); color: var(--ink-2); border-radius: 999px; padding: 0.3rem 0.7rem; cursor: pointer; }
+  button.theme-toggle:hover { color: var(--ink); }
 
   .filter-bar { display: flex; gap: 0.9rem; flex-wrap: wrap; align-items: flex-end; background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 1.25rem; }
   .filter-field { display: flex; flex-direction: column; gap: 0.25rem; }
   .filter-field label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
-  .filter-field select { font: inherit; font-size: 0.88rem; padding: 0.4rem 0.55rem; border: 1px solid var(--grid); border-radius: 6px; background: #fff; color: var(--ink); min-width: 168px; }
+  .filter-field select { font: inherit; font-size: 0.88rem; padding: 0.4rem 0.55rem; border: 1px solid var(--grid); border-radius: 6px; background: var(--select-bg); color: var(--ink); min-width: 168px; }
   .filter-bar .reset-btn { font-size: 0.82rem; color: var(--blue); background: none; border: 1px solid var(--grid); border-radius: 6px; padding: 0.42rem 0.75rem; cursor: pointer; }
   .filter-bar .reset-btn:hover { background: var(--page); }
   .active-filter-note { font-size: 0.82rem; color: var(--muted); margin: -0.5rem 0 1.25rem; }
@@ -93,7 +117,7 @@ HTML_TEMPLATE = r"""<!doctype html>
   .legend-swatch { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
 
   table.datatable { border-collapse: collapse; width: 100%; font-size: 0.83rem; }
-  table.datatable th { text-align: right; color: var(--muted); font-weight: 500; border-bottom: 1px solid #c3c2b7; padding: 0.4rem 0.55rem; position: sticky; top: 0; background: var(--surface); }
+  table.datatable th { text-align: right; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--baseline); padding: 0.4rem 0.55rem; position: sticky; top: 0; background: var(--surface); }
   table.datatable th:first-child, table.datatable td:first-child { text-align: left; }
   table.datatable td { text-align: right; padding: 0.38rem 0.55rem; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
   .table-scroll { max-height: 420px; overflow-y: auto; border: 1px solid var(--grid); border-radius: 8px; }
@@ -105,6 +129,15 @@ HTML_TEMPLATE = r"""<!doctype html>
 </style>
 </head>
 <body>
+<script>
+  // Apply saved theme before first paint, to avoid a flash of the wrong theme.
+  (function() {
+    try {
+      const saved = localStorage.getItem("imprint-theme");
+      if (saved === "dark" || saved === "light") document.documentElement.setAttribute("data-theme", saved);
+    } catch (e) {}
+  })();
+</script>
 <div class="wrap">
 
 <header class="page-head">
@@ -112,6 +145,7 @@ HTML_TEMPLATE = r"""<!doctype html>
   <nav class="doc-links">
     <a href="narrative_report.html">Narrative walkthrough &rarr;</a>
     <a href="pitch_deck.html">How this was built &rarr;</a>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9789;</button>
   </nav>
 </header>
 <p class="subtitle">All 10 merchant programs, Q1 2023 actuals through Q2 2028 forecast &middot; filter by merchant, vintage, and FICO tier for ad hoc analysis</p>
@@ -191,7 +225,19 @@ HTML_TEMPLATE = r"""<!doctype html>
 const DATA = __DASHBOARD_DATA__;
 const FORECAST_START = DATA.forecastStartIdx;
 
-const PALETTE = { blue: "#2a78d6", orange: "#eb6834", aqua: "#1baf7a", red: "#e34948" };
+// Charts are JS-rendered (fresh SVG per filter change), so dark mode is
+// handled by picking the right hex map at render time and re-rendering --
+// simpler and more reliably cross-browser than routing dynamically-set SVG
+// attributes through CSS custom properties. Values match the CSS tokens above.
+const PALETTE_LIGHT = { blue: "#2a78d6", orange: "#eb6834", aqua: "#1baf7a", red: "#e34948" };
+const PALETTE_DARK = { blue: "#3987e5", orange: "#d95926", aqua: "#199e70", red: "#e66767" };
+function isDarkMode() {
+  const attr = document.documentElement.getAttribute("data-theme");
+  if (attr === "dark") return true;
+  if (attr === "light") return false;
+  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+function currentPalette() { return isDarkMode() ? PALETTE_DARK : PALETTE_LIGHT; }
 const fmtMoney = (x) => {
   const sign = x < 0 ? "-" : "";
   const a = Math.abs(x);
@@ -314,6 +360,7 @@ function svgEl(tag, attrs) {
 }
 
 function renderTrendChart(f) {
+  const PALETTE = currentPalette();
   const rows = DATA.rows.filter(r => matchesFilter(r, f));
   const byDate = groupBy(rows, r => r.r);
   const dateIdxs = [...byDate.keys()].sort((a,b) => a-b);
@@ -385,6 +432,7 @@ function renderTrendChart(f) {
 }
 
 function renderComparisonChart(containerId, dimKey, dimValues, f, skipOpt) {
+  const PALETTE = currentPalette();
   const container = document.getElementById(containerId);
   container.innerHTML = "";
 
@@ -481,6 +529,13 @@ function renderAll() {
 [els.merchant, els.vintage, els.fico, els.scenario].forEach(el => el.addEventListener("change", renderAll));
 document.getElementById("reset-filters").addEventListener("click", () => {
   els.merchant.value = "all"; els.vintage.value = "all"; els.fico.value = "all"; els.scenario.value = "all";
+  renderAll();
+});
+
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  const next = isDarkMode() ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("imprint-theme", next); } catch (e) {}
   renderAll();
 });
 

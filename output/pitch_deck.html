@@ -5,10 +5,25 @@
 <title>Imprint P&amp;L Model &mdash; How It Was Built</title>
 <style>
   :root {
+    color-scheme: light;
     --blue: #2a78d6; --orange: #eb6834; --aqua: #1baf7a;
     --red: #e34948; --yellow: #eda100;
     --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
     --grid: #e1e0d9; --surface: #fcfcfb; --page: #f9f9f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --blue: #3987e5; --orange: #d95926; --aqua: #199e70; --red: #e66767; --yellow: #c98500;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --surface: #1a1a19; --page: #0d0d0d;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --blue: #3987e5; --orange: #d95926; --aqua: #199e70; --red: #e66767; --yellow: #c98500;
+    --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --surface: #1a1a19; --page: #0d0d0d;
   }
   * { box-sizing: border-box; }
   body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--page); color: var(--ink); margin: 0; }
@@ -16,6 +31,8 @@
   nav.top-nav { position: sticky; top: 0; background: var(--page); border-bottom: 1px solid var(--grid); padding: 0.7rem 1.5rem; font-size: 0.85rem; z-index: 10; display: flex; justify-content: space-between; }
   nav.top-nav a { color: var(--blue); text-decoration: none; margin-left: 1rem; }
   nav.top-nav a:hover { text-decoration: underline; }
+  button.theme-toggle { margin-left: 1.1rem; font-size: 0.85rem; background: var(--surface); border: 1px solid var(--grid); color: var(--ink-2); border-radius: 999px; padding: 0.25rem 0.65rem; cursor: pointer; }
+  button.theme-toggle:hover { color: var(--ink); }
   section.slide { padding: 3.2rem 1.75rem; border-bottom: 1px solid var(--grid); }
   section.slide.alt { background: var(--surface); }
   section.slide h1 { font-size: 2rem; margin: 0 0 0.3rem; }
@@ -27,8 +44,8 @@
   section.slide li { margin-bottom: 0.5rem; }
   section.slide strong { color: var(--ink); }
   .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1.5rem 0; }
-  .stat { flex: 1; min-width: 150px; background: var(--page); border: 1px solid var(--grid); border-radius: 10px; padding: 0.9rem 1.1rem; }
-  section.slide.alt .stat { background: #fff; }
+  .stat { flex: 1; min-width: 150px; background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 0.9rem 1.1rem; }
+  section.slide.alt .stat { background: var(--page); }
   .stat .n { font-size: 1.55rem; font-weight: 700; }
   .stat .l { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
   .two-col { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 2rem; align-items: center; }
@@ -37,8 +54,8 @@
   table.mini th { text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid #c3c2b7; padding: 0.4rem 0.5rem; }
   table.mini td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--grid); color: var(--ink-2); }
   table.mini td:first-child { color: var(--ink); font-weight: 600; }
-  .bug-card { background: var(--page); border-left: 3px solid var(--red); border-radius: 0 8px 8px 0; padding: 0.85rem 1.1rem; margin-bottom: 0.9rem; }
-  section.slide.alt .bug-card { background: #fff; }
+  .bug-card { background: var(--surface); border-left: 3px solid var(--red); border-radius: 0 8px 8px 0; padding: 0.85rem 1.1rem; margin-bottom: 0.9rem; }
+  section.slide.alt .bug-card { background: var(--page); }
   .bug-card .bug-title { font-weight: 700; margin-bottom: 0.2rem; }
   .bug-card .bug-fix { color: var(--aqua); font-weight: 600; }
   .check-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0.55rem 0; border-bottom: 1px solid var(--grid); font-size: 0.92rem; }
@@ -54,9 +71,17 @@
 </style>
 </head>
 <body>
+<script>
+  (function() {
+    try {
+      const saved = localStorage.getItem("imprint-theme");
+      if (saved === "dark" || saved === "light") document.documentElement.setAttribute("data-theme", saved);
+    } catch (e) {}
+  })();
+</script>
 <nav class="top-nav">
   <span><strong>Imprint P&amp;L Model</strong> &middot; How It Was Built</span>
-  <span><a href="dashboard.html">Executive dashboard</a><a href="narrative_report.html">Narrative walkthrough</a></span>
+  <span><a href="dashboard.html">Executive dashboard</a><a href="narrative_report.html">Narrative walkthrough</a><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9789;</button></span>
 </nav>
 
 <div class="deck">
@@ -91,31 +116,31 @@
   <svg class="diagram" viewBox="0 0 900 220" role="img" aria-label="Architecture diagram: drivers feed a rate curve library, which multiplies out to P&amp;L dollar lines">
     <defs>
       <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="#898781"/>
+        <path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/>
       </marker>
     </defs>
     <g font-family="inherit" font-size="13.5">
-      <rect x="20" y="70" width="190" height="80" rx="10" fill="#2a78d6" opacity="0.12" stroke="#2a78d6"/>
-      <text x="115" y="100" text-anchor="middle" font-weight="700" fill="#2a78d6">Drivers</text>
-      <text x="115" y="120" text-anchor="middle" fill="#52514e" font-size="11.5">New Accounts, Balances,</text>
-      <text x="115" y="135" text-anchor="middle" fill="#52514e" font-size="11.5">Volume &mdash; chain-ladder curves</text>
+      <rect x="20" y="70" width="190" height="80" rx="10" style="fill:var(--blue);stroke:var(--blue)" opacity="0.12"/>
+      <text x="115" y="100" text-anchor="middle" font-weight="700" style="fill:var(--blue)">Drivers</text>
+      <text x="115" y="120" text-anchor="middle" style="fill:var(--ink-2)" font-size="11.5">New Accounts, Balances,</text>
+      <text x="115" y="135" text-anchor="middle" style="fill:var(--ink-2)" font-size="11.5">Volume &mdash; chain-ladder curves</text>
 
-      <line x1="210" y1="110" x2="290" y2="110" stroke="#898781" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="210" y1="110" x2="290" y2="110" style="stroke:var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-      <rect x="300" y="70" width="220" height="80" rx="10" fill="#eb6834" opacity="0.12" stroke="#eb6834"/>
-      <text x="410" y="100" text-anchor="middle" font-weight="700" fill="#eb6834">Rate curve library</text>
-      <text x="410" y="120" text-anchor="middle" fill="#52514e" font-size="11.5">$ line &divide; driver, by cohort age</text>
-      <text x="410" y="135" text-anchor="middle" fill="#52514e" font-size="11.5">(loss rate, yield, interchange rate...)</text>
+      <rect x="300" y="70" width="220" height="80" rx="10" style="fill:var(--orange);stroke:var(--orange)" opacity="0.12"/>
+      <text x="410" y="100" text-anchor="middle" font-weight="700" style="fill:var(--orange)">Rate curve library</text>
+      <text x="410" y="120" text-anchor="middle" style="fill:var(--ink-2)" font-size="11.5">$ line &divide; driver, by cohort age</text>
+      <text x="410" y="135" text-anchor="middle" style="fill:var(--ink-2)" font-size="11.5">(loss rate, yield, interchange rate...)</text>
 
-      <line x1="520" y1="110" x2="600" y2="110" stroke="#898781" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <line x1="520" y1="110" x2="600" y2="110" style="stroke:var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-      <rect x="610" y="70" width="270" height="80" rx="10" fill="#1baf7a" opacity="0.12" stroke="#1baf7a"/>
-      <text x="745" y="100" text-anchor="middle" font-weight="700" fill="#1baf7a">P&amp;L dollar lines</text>
-      <text x="745" y="120" text-anchor="middle" fill="#52514e" font-size="11.5">rate &times; forecasted driver</text>
-      <text x="745" y="135" text-anchor="middle" fill="#52514e" font-size="11.5">&rarr; Gross Revenue, Cost of Sales, ...</text>
+      <rect x="610" y="70" width="270" height="80" rx="10" style="fill:var(--aqua);stroke:var(--aqua)" opacity="0.12"/>
+      <text x="745" y="100" text-anchor="middle" font-weight="700" style="fill:var(--aqua)">P&amp;L dollar lines</text>
+      <text x="745" y="120" text-anchor="middle" style="fill:var(--ink-2)" font-size="11.5">rate &times; forecasted driver</text>
+      <text x="745" y="135" text-anchor="middle" style="fill:var(--ink-2)" font-size="11.5">&rarr; Gross Revenue, Cost of Sales, ...</text>
 
-      <text x="450" y="20" text-anchor="middle" fill="#898781" font-size="12">One mechanism handles a genuinely flat rate (yield, ~6.05%/quarter) and a genuinely curving one</text>
-      <text x="450" y="36" text-anchor="middle" fill="#898781" font-size="12">(loss rate, rising from 0% toward a plateau near quarter 9&ndash;13) without hand-coding which is which.</text>
+      <text x="450" y="20" text-anchor="middle" style="fill:var(--muted)" font-size="12">One mechanism handles a genuinely flat rate (yield, ~6.05%/quarter) and a genuinely curving one</text>
+      <text x="450" y="36" text-anchor="middle" style="fill:var(--muted)" font-size="12">(loss rate, rising from 0% toward a plateau near quarter 9&ndash;13) without hand-coding which is which.</text>
     </g>
   </svg>
   <div class="stat-row">
@@ -135,19 +160,19 @@
     </div>
     <svg class="diagram" viewBox="0 0 380 240" role="img" aria-label="Backbook cohorts anchored to last actual and grown forward; frontbook cohorts seeded from a growth trend and grown on the same curve">
       <g font-family="inherit" font-size="12">
-        <text x="10" y="20" font-weight="700" fill="#2a78d6">Backbook</text>
-        <line x1="10" y1="60" x2="130" y2="60" stroke="#2a78d6" stroke-width="2"/>
-        <circle cx="130" cy="60" r="4" fill="#2a78d6"/>
-        <line x1="130" y1="60" x2="230" y2="45" stroke="#2a78d6" stroke-width="2" stroke-dasharray="4,3"/>
-        <text x="10" y="80" fill="#52514e" font-size="11">actual history</text>
-        <text x="140" y="42" fill="#52514e" font-size="11">curve-forecast</text>
+        <text x="10" y="20" font-weight="700" style="fill:var(--blue)">Backbook</text>
+        <line x1="10" y1="60" x2="130" y2="60" style="stroke:var(--blue)" stroke-width="2"/>
+        <circle cx="130" cy="60" r="4" style="fill:var(--blue)"/>
+        <line x1="130" y1="60" x2="230" y2="45" style="stroke:var(--blue)" stroke-width="2" stroke-dasharray="4,3"/>
+        <text x="10" y="80" style="fill:var(--ink-2)" font-size="11">actual history</text>
+        <text x="140" y="42" style="fill:var(--ink-2)" font-size="11">curve-forecast</text>
 
-        <text x="10" y="130" font-weight="700" fill="#eb6834">Frontbook</text>
-        <circle cx="30" cy="170" r="4" fill="#eb6834"/>
-        <line x1="30" y1="170" x2="230" y2="150" stroke="#eb6834" stroke-width="2" stroke-dasharray="4,3"/>
-        <text x="10" y="190" fill="#52514e" font-size="11">seeded from</text>
-        <text x="10" y="203" fill="#52514e" font-size="11">growth trend</text>
-        <text x="140" y="143" fill="#52514e" font-size="11">same curve library</text>
+        <text x="10" y="130" font-weight="700" style="fill:var(--orange)">Frontbook</text>
+        <circle cx="30" cy="170" r="4" style="fill:var(--orange)"/>
+        <line x1="30" y1="170" x2="230" y2="150" style="stroke:var(--orange)" stroke-width="2" stroke-dasharray="4,3"/>
+        <text x="10" y="190" style="fill:var(--ink-2)" font-size="11">seeded from</text>
+        <text x="10" y="203" style="fill:var(--ink-2)" font-size="11">growth trend</text>
+        <text x="140" y="143" style="fill:var(--ink-2)" font-size="11">same curve library</text>
       </g>
     </svg>
   </div>
@@ -231,5 +256,14 @@
 
 <footer>Built from combined_actuals_forecast.parquet via the scripts/ pipeline &middot; see BUILD_LOG.md for full detail.</footer>
 </div>
+<script>
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark"
+      || (document.documentElement.getAttribute("data-theme") !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("imprint-theme", next); } catch (e) {}
+  });
+</script>
 </body>
 </html>
