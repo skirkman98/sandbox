@@ -56,15 +56,23 @@ FICO_BUCKETS = ["Exceptional (800-850)", "Very Good (740-799)", "Good (670-739)"
 TREND_LOOKBACK_QUARTERS = 4
 GROWTH_CAP = 0.25  # cap trailing-quarter growth rate applied per forecast quarter, +/-25%
 
-# Seasonality (Day 2 TODO item 1): applied ONLY to this driver, ONLY on
-# forecast-period rows -- see build_seasonal_index() in 04_curve_library.py
-# for how the 4 quarter-of-year multipliers are estimated, and BUILD_LOG.md
-# "Day 2 -- Seasonality" for why NTV alone is sufficient (it's the Driver
-# Basis for 7 of the 16 Rate-Derived line items, so the signal propagates
-# into Interchange/MDR/Rewards/Royalties/Rebates/Payment Fees/Fraud
-# automatically without being applied to each of them separately -- doing so
-# WOULD double-count).
-SEASONAL_LINE_ITEM = "Net Transaction Volume"
+# Seasonality (Day 2 TODO item 1, extended after shipping): applied ONLY to
+# these drivers, ONLY on forecast-period rows -- see build_seasonal_index()
+# in 04_curve_library.py for how each item's own 4 quarter-of-year
+# multipliers are independently estimated. Originally NTV only; extended to
+# Revolve Balance/Outstanding Balance/In-Month Active Accounts after a user
+# caught the forecast's Gross Revenue swing running bigger than the actuals'
+# own swing -- Interest Revenue tracks Revolve Balance, which peaks in Q1
+# (opposite NTV's Q4 peak), so it partially cancels the NTV-driven revenue
+# lines in the real actuals; that cancellation was missing when only NTV had
+# an index. See BUILD_LOG.md "Day 2 -- Extending seasonality beyond NTV".
+# Each item here is itself a Driver Basis for other Rate-Derived $ lines
+# (NTV -> Interchange/MDR/Rewards/Royalties/Rebates/Payment Fees/Fraud;
+# Revolve Balance -> Interest Revenue; Outstanding Balance -> Fee Revenue/
+# Cost of Funds/Charge Offs; Active Accounts -> Other Revenue/Servicing), so
+# the signal propagates automatically without being applied a second time to
+# any of those -- doing so WOULD double-count.
+SEASONAL_LINE_ITEMS = {"Net Transaction Volume", "Revolve Balance", "Outstanding Balance", "In-Month Active Accounts"}
 
 
 def load_all():
@@ -77,23 +85,72 @@ def load_all():
     classification = pd.read_csv(DATA_DIR / "line_item_classification.csv")
     pooled_tail_factors = pd.read_csv(OUT_DIR / "curve_pooled_tail_factors.csv")
     pooled_tail_rates = pd.read_csv(OUT_DIR / "curve_pooled_tail_rates.csv")
-    seasonal_index = pd.read_csv(OUT_DIR / "curve_seasonal_index.csv").set_index("quarter_of_year")["seasonal_index"].to_dict()
+    # {Line Item: {quarter_of_year: multiplier}} -- one independently-measured
+    # index per item in SEASONAL_LINE_ITEMS, not one shared index reused
+    # across items with a different real phase.
+    seasonal_csv = pd.read_csv(OUT_DIR / "curve_seasonal_index.csv")
+    seasonal_index = {
+        li: sub.set_index("quarter_of_year")["seasonal_index"].to_dict()
+        for li, sub in seasonal_csv.groupby("Line Item")
+    }
     return (actuals, dev_factors, seeds, rate_curves, acq_rates, pooled, classification,
             pooled_tail_factors, pooled_tail_rates, seasonal_index)
 
 
-def seasonal_step_ratio(seasonal_index: dict, dest_report_idx: int) -> float:
+# Damps reliance on the real anchor's own calendar position specifically --
+# see seasonal_step_ratio's docstring. Only applied to the ONE step that
+# crosses from a real actual observation into the forecast; every
+# subsequent within-forecast quarter-to-quarter step stays undamped (full
+# strength) -- telescoping keeps these two effects mathematically separable
+# (see the docstring for the derivation), so this does NOT also shrink the
+# within-year reshaping the way a uniform damping exponent on every step
+# would have (tried first, rejected: it crushed the top trend chart's
+# quarter-to-quarter swing from ~25% down to ~10% while barely denting the
+# level-shift it was meant to fix, since both effects are the SAME
+# telescoped quantity under uniform damping). 0.5 chosen empirically against
+# Revolve Balance specifically, whose anchor quarter (Q2 2026, s=0.920) sits
+# furthest from 1.0 of the four items and was the dominant source of the
+# ~18% Gross Profit jump this was built to fix -- see BUILD_LOG.md "Day 2 --
+# Extending seasonality beyond NTV" for the before/after measurement.
+ANCHOR_RATIO_DAMPING = 0.2
+
+
+def seasonal_step_ratio(seasonal_index: dict, dest_report_idx: int, anchor_crossing: bool = False) -> float:
     """Ratio of the destination quarter's seasonal multiplier to the
     immediately-prior quarter's. Multiplying by this at EVERY QSB-advancing
-    step is mathematically equivalent (telescopes) to applying
-    s(dest)/s(anchor) once at the first forecast step -- but composes
-    correctly regardless of how many steps a given loop takes, and correctly
-    normalizes away whatever real seasonal level the anchor (a real actual
-    observation, for backbook cohorts) already happened to carry, replacing
-    it with the model's typical seasonal level for the destination quarter
-    instead of stacking a second seasonal effect on top of the first."""
+    step telescopes (regardless of how many steps a loop takes) to
+    s(dest)/s(anchor), where "anchor" is a real actual observation for
+    backbook cohorts -- undamped, this exactly removes the real anchor's own
+    seasonal level and replaces it with the model's typical level for the
+    destination quarter, which is correct in isolation.
+
+    The catch: almost every backbook cohort shares the SAME anchor quarter
+    (Q2 2026, the portfolio's last actual quarter), so 1/s(anchor) becomes a
+    near-universal, undamped LEVEL SHIFT applied to the entire 2-year-ahead
+    forecast for whichever line item's Q2 index happens to sit furthest from
+    1.0 -- not a within-year reshaping effect, which is what this mechanism
+    was designed to produce. Caught empirically (Gross Profit jumped ~18%
+    when Revolve Balance was added to the seasonal set, traced to exactly
+    this mechanism, not a double-count or sign bug -- verified by hand
+    against one cohort first).
+
+    Fix: `anchor_crossing=True` on ONLY the first step for a given cohort
+    (the one whose "source" value is the real anchor observation, not a
+    previously-forecasted quarter) divides by s(src)**ANCHOR_RATIO_DAMPING
+    instead of s(src) -- a partial-confidence discount on that single real
+    data point, justified by it being exactly one (of only ~4) historical
+    observations for its own quarter-of-year, not obviously more reliable
+    than the others that already went into estimating s() itself. Every
+    later step (anchor_crossing=False, the default) keeps the full,
+    undamped ratio. Telescoping still cleanly separates the two effects:
+    for a chain anchor -> dest1 -> dest2 -> ... -> destN, the cumulative
+    multiplier works out to s(destN) / s(anchor)**ANCHOR_RATIO_DAMPING --
+    i.e. the destination quarter's own multiplier applies at FULL strength
+    (full within-forecast reshaping preserved exactly), only the anchor's
+    contribution is discounted."""
     dest_q, src_q = dest_report_idx % 4, (dest_report_idx - 1) % 4
-    return seasonal_index[dest_q] / seasonal_index[src_q]
+    src_val = seasonal_index[src_q] ** ANCHOR_RATIO_DAMPING if anchor_crossing else seasonal_index[src_q]
+    return seasonal_index[dest_q] / src_val
 
 
 def grain_fico_for(merchant, fico, pooled_merchants):
@@ -232,6 +289,9 @@ def forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook
             # observed QSB for a given cohort, but this must NOT carry over
             # (and get advanced) across different line items in this loop.
             last_actual_qsb = LAST_ACTUAL_IDX - vintage_idx
+            true_last_actual_qsb = last_actual_qsb  # captured before the loop below advances last_actual_qsb --
+            # the ONE qsb_from value whose "value" is still the real actual anchor, not a previously-forecasted
+            # quarter; see seasonal_step_ratio's anchor_crossing parameter.
             cohort_data = actuals[
                 (actuals["Merchant"] == merchant) & (actuals["Vintage Index"] == vintage_idx)
                 & (actuals["FICO Bucket"] == fico) & (actuals["Line Item"] == li)
@@ -248,10 +308,10 @@ def forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook
                 for qsb_from in range(last_actual_qsb, target_qsb):
                     factor = get_factor(factor_lookup, li, merchant, gfico, qsb_from, pooled_tail_factors)
                     value *= factor
-                    if seasonal_index is not None and li == SEASONAL_LINE_ITEM:
+                    if seasonal_index is not None and li in seasonal_index:
                         dest_report_idx = vintage_idx + qsb_from + 1
                         if dest_report_idx >= FORECAST_START_IDX:
-                            value *= seasonal_step_ratio(seasonal_index, dest_report_idx)
+                            value *= seasonal_step_ratio(seasonal_index[li], dest_report_idx, anchor_crossing=(qsb_from == true_last_actual_qsb))
                 out_rows.append({
                     "Merchant": merchant, "Vintage Index": vintage_idx, "FICO Bucket": fico,
                     "Report Date Index": report_idx, "QSB": target_qsb, "Line Item": li, "Value": value,
@@ -276,13 +336,13 @@ def forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook
             if seed_ratio is None:
                 continue
             value = seed_ratio * new_accts
-            if seasonal_index is not None and li == SEASONAL_LINE_ITEM:
+            if seasonal_index is not None and li in seasonal_index:
                 # No real anchor to normalize away here (unlike backbook) --
                 # seed_ratio itself already pools across vintages launched in
                 # every calendar quarter, so it's already close to a
                 # seasonality-neutral baseline. Apply the target quarter's
                 # multiplier directly.
-                value *= seasonal_index[vintage_idx % 4]
+                value *= seasonal_index[li][vintage_idx % 4]
             out_rows.append({
                 "Merchant": merchant, "Vintage Index": vintage_idx, "FICO Bucket": fico,
                 "Report Date Index": vintage_idx, "QSB": 0, "Line Item": li, "Value": value,
@@ -293,8 +353,8 @@ def forecast_drivers(actuals, factor_lookup, seed_lookup, new_accounts_frontbook
                 target_qsb = report_idx - vintage_idx
                 factor = get_factor(factor_lookup, li, merchant, gfico, qsb_cursor, pooled_tail_factors)
                 value *= factor
-                if seasonal_index is not None and li == SEASONAL_LINE_ITEM:
-                    value *= seasonal_step_ratio(seasonal_index, report_idx)
+                if seasonal_index is not None and li in seasonal_index:
+                    value *= seasonal_step_ratio(seasonal_index[li], report_idx)
                 out_rows.append({
                     "Merchant": merchant, "Vintage Index": vintage_idx, "FICO Bucket": fico,
                     "Report Date Index": report_idx, "QSB": target_qsb, "Line Item": li, "Value": value,

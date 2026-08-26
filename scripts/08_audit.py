@@ -142,23 +142,20 @@ def check_b_rollforward_identity():
     actuals period. This decomposition is now built into the check directly,
     replacing the earlier "informational, not root-caused" framing.
 
-    Day 2 addendum: the continuing-cohort gap is now visibly larger in
-    FORECAST-period quarters than actuals (still <1.5% in actuals, up to
-    ~24% in forecast quarters) since 04/05 added quarter-of-year seasonality
-    to Net Transaction Volume only (see BUILD_LOG.md "Day 2 -- Seasonality")
-    -- Outstanding Balance still rolls forward on its own smooth,
-    non-seasonal development-factor curve. NTV now swings +/-40% by calendar
-    quarter while OS doesn't move in tandem, so this identity (which sums
-    NTV into the balance roll-forward) necessarily gaps wider specifically in
-    the highest-seasonal-swing quarters -- confirmed below by breaking the
-    max gap out separately for actuals vs. forecast. This is a real,
-    understood consequence of scoping the seasonality fix to NTV only (chosen
-    to keep the change layered and avoid redesigning the whole driver
-    library), not a new bug -- but it's an honest flag that Outstanding
-    Balance (and other balance/stock drivers) likely have their own real
-    seasonality that this build does not yet model, and a more complete
-    seasonality pass would need to extend to them for full internal
-    consistency.
+    Day 2 addendum: the continuing-cohort gap is visibly larger in
+    FORECAST-period quarters than actuals (still ~1% in actuals). It was
+    ~24% in forecast quarters when seasonality was applied to Net
+    Transaction Volume alone (Outstanding Balance rolling forward on a
+    smooth, non-seasonal curve while NTV swung independently); extending
+    seasonality to Outstanding Balance itself (see BUILD_LOG.md "Day 2 --
+    Extending seasonality beyond NTV") narrowed that to ~14% -- expected
+    to shrink, not vanish, since Outstanding Balance's own seasonal index is
+    a real but separately-measured, imperfectly-correlated signal from
+    NTV's (different phase, different magnitude), not a mechanical
+    derivative of it -- this identity was never going to close to the
+    actuals' ~1% just from adding a second independent seasonal curve.
+    Confirmed below by breaking the max gap out separately for actuals vs.
+    forecast.
     """
     df = pd.read_parquet(OUT_DIR / "combined_actuals_forecast.parquet")
 
@@ -215,8 +212,9 @@ def check_b_rollforward_identity():
         status,
         f"max gap {max_gap:.1%} whole-portfolio, {max_gap_continuing:.1%} for continuing (QSB>=1) cohorts overall "
         f"({max_gap_continuing_actuals:.1%} in actuals, {max_gap_continuing_forecast:.1%} in forecast quarters -- "
-        f"the forecast-period widening vs. actuals is the expected consequence of Day 2's NTV-only seasonality, see "
-        f"this function's docstring) -- the underlying gap itself is explained by new-cohort originations carrying "
+        f"the forecast-period widening vs. actuals is the expected consequence of Day 2's seasonality (multiple "
+        f"independent driver-level indices, not a shared one -- see this function's docstring) -- the underlying "
+        f"gap itself is explained by new-cohort originations carrying "
         f"balance beyond their own NTV, not a modeling error",
     )
     return gaps_df
@@ -441,57 +439,74 @@ def check_f_independent_trend():
 SEASONAL_CLIP = (0.5, 1.6)  # must match 04_curve_library.py's SEASONAL_CLIP -- checked independently below
 
 
+# Must match 05_forecast_engine.py's SEASONAL_LINE_ITEMS -- every Driver
+# line item that's supposed to carry its own independently-measured index.
+SEASONAL_LINE_ITEMS = ["Net Transaction Volume", "Revolve Balance", "Outstanding Balance", "In-Month Active Accounts"]
+
+
 def check_g_seasonal_index():
-    """Independently re-derives the quarter-of-year seasonal index for Net
-    Transaction Volume (same method as 04_curve_library.py's
-    build_seasonal_index -- re-implemented here, not imported) and checks
-    two things: (1) the shipped curve_seasonal_index.csv matches this
+    """Independently re-derives the quarter-of-year seasonal index for EACH
+    of SEASONAL_LINE_ITEMS (same method as 04_curve_library.py's
+    build_seasonal_index -- re-implemented here, not imported) and checks,
+    per item: (1) the shipped curve_seasonal_index.csv matches this
     independent recompute, and (2) every multiplier sits inside the declared
     clip band and the four multipliers average to ~1.0 -- i.e. the seasonal
     adjustment reshapes the distribution across quarters without changing the
-    annualized total, rather than silently inflating/deflating the year."""
+    annualized total, rather than silently inflating/deflating the year.
+    Originally NTV-only; generalized when seasonality was extended to
+    Revolve Balance/Outstanding Balance/Active Accounts (see BUILD_LOG.md
+    "Day 2 -- Extending seasonality beyond NTV") -- the first version of this
+    check assumed one row per quarter_of_year and silently mixed different
+    line items' values together once curve_seasonal_index.csv grew a second
+    dimension, which is exactly the kind of regression this suite exists to
+    catch (and did, the day it was introduced)."""
     df = pd.read_parquet(OUT_DIR / "clean_actuals_grained.parquet")
-    ntv = df[(df["Line Item"] == "Net Transaction Volume") & (df["Model Role"] == "Driver")]
-    cohort = ntv.groupby(["Merchant", "Vintage Index", "QSB"])["Value"].sum().reset_index()
+    shipped_all = pd.read_csv(OUT_DIR / "curve_seasonal_index.csv")
 
-    qsb0 = cohort[cohort["QSB"] == 0].set_index(["Merchant", "Vintage Index"])["Value"].rename("qsb0_value")
-    normalized = cohort.merge(qsb0, on=["Merchant", "Vintage Index"], how="left")
-    normalized = normalized[normalized["qsb0_value"] > 0]
-    normalized["index_val"] = normalized["Value"] / normalized["qsb0_value"]
+    all_ok = True
+    details = []
+    for line_item in SEASONAL_LINE_ITEMS:
+        item = df[(df["Line Item"] == line_item) & (df["Model Role"] == "Driver")]
+        cohort = item.groupby(["Merchant", "Vintage Index", "QSB"])["Value"].sum().reset_index()
 
-    w = normalized.copy()
-    w["weighted"] = w["index_val"] * w["qsb0_value"]
-    age_curve = w.groupby("QSB").agg(weighted_sum=("weighted", "sum"), weight_sum=("qsb0_value", "sum"))
-    age_curve["expected_index"] = age_curve["weighted_sum"] / age_curve["weight_sum"]
+        qsb0 = cohort[cohort["QSB"] == 0].set_index(["Merchant", "Vintage Index"])["Value"].rename("qsb0_value")
+        normalized = cohort.merge(qsb0, on=["Merchant", "Vintage Index"], how="left")
+        normalized = normalized[normalized["qsb0_value"].abs() > 0]
+        normalized["index_val"] = normalized["Value"] / normalized["qsb0_value"]
 
-    normalized = normalized.merge(age_curve["expected_index"], on="QSB", how="left")
-    normalized = normalized[normalized["QSB"] > 0]
-    normalized["residual"] = normalized["index_val"] / normalized["expected_index"]
-    normalized["Report Date Index"] = normalized["Vintage Index"] + normalized["QSB"]
-    normalized["quarter_of_year"] = normalized["Report Date Index"] % 4
+        w = normalized.copy()
+        w["weighted"] = w["index_val"] * w["qsb0_value"].abs()
+        age_curve = w.groupby("QSB").agg(weighted_sum=("weighted", "sum"), weight_sum=("qsb0_value", lambda s: s.abs().sum()))
+        age_curve["expected_index"] = age_curve["weighted_sum"] / age_curve["weight_sum"]
 
-    w2 = normalized.copy()
-    w2["weighted"] = w2["residual"] * w2["qsb0_value"]
-    by_report_date = w2.groupby("Report Date Index").agg(weighted_sum=("weighted", "sum"), weight_sum=("qsb0_value", "sum"))
-    by_report_date["avg_residual"] = by_report_date["weighted_sum"] / by_report_date["weight_sum"]
-    by_report_date["quarter_of_year"] = by_report_date.index % 4
+        normalized = normalized.merge(age_curve["expected_index"], on="QSB", how="left")
+        normalized = normalized[normalized["QSB"] > 0]
+        normalized["residual"] = normalized["index_val"] / normalized["expected_index"]
+        normalized["Report Date Index"] = normalized["Vintage Index"] + normalized["QSB"]
+        normalized["quarter_of_year"] = normalized["Report Date Index"] % 4
 
-    recomputed = by_report_date.groupby("quarter_of_year")["avg_residual"].mean()
-    recomputed = (recomputed / recomputed.mean()).clip(*SEASONAL_CLIP)
+        w2 = normalized.copy()
+        w2["weighted"] = w2["residual"] * w2["qsb0_value"].abs()
+        by_report_date = w2.groupby("Report Date Index").agg(weighted_sum=("weighted", "sum"), weight_sum=("qsb0_value", lambda s: s.abs().sum()))
+        by_report_date["avg_residual"] = by_report_date["weighted_sum"] / by_report_date["weight_sum"]
+        by_report_date["quarter_of_year"] = by_report_date.index % 4
 
-    shipped = pd.read_csv(OUT_DIR / "curve_seasonal_index.csv").set_index("quarter_of_year")["seasonal_index"]
-    max_diff = (recomputed - shipped).abs().max()
+        recomputed = by_report_date.groupby("quarter_of_year")["avg_residual"].mean()
+        recomputed = (recomputed / recomputed.mean()).clip(*SEASONAL_CLIP)
 
-    out_of_band = shipped[(shipped < SEASONAL_CLIP[0]) | (shipped > SEASONAL_CLIP[1])]
-    annual_mean = shipped.mean()
+        shipped = shipped_all[shipped_all["Line Item"] == line_item].set_index("quarter_of_year")["seasonal_index"]
+        max_diff = (recomputed - shipped).abs().max()
+        out_of_band = shipped[(shipped < SEASONAL_CLIP[0]) | (shipped > SEASONAL_CLIP[1])]
+        annual_mean = shipped.mean()
 
-    status = PASS if (max_diff < 1e-6 and out_of_band.empty and abs(annual_mean - 1.0) < 1e-6) else FAIL
+        ok = max_diff < 1e-6 and out_of_band.empty and abs(annual_mean - 1.0) < 1e-6
+        all_ok = all_ok and ok
+        details.append(f"{line_item}: diff={max_diff:.6f}, mean={annual_mean:.4f}, values={shipped.round(3).to_dict()}")
+
     record(
-        "G. Seasonal index sanity (independent recompute, clip band, annualized-total-neutral)",
-        status,
-        f"max diff vs. independent recompute: {max_diff:.6f}; {len(out_of_band)} multiplier(s) outside "
-        f"[{SEASONAL_CLIP[0]}, {SEASONAL_CLIP[1]}]; 4-quarter mean: {annual_mean:.4f} (should be 1.0000); "
-        f"shipped values: {shipped.round(3).to_dict()}",
+        "G. Seasonal index sanity (independent recompute, clip band, annualized-total-neutral, all 4 items)",
+        PASS if all_ok else FAIL,
+        " | ".join(details),
     )
 
 

@@ -1,5 +1,17 @@
-quarter_of_year,seasonal_index
-0,0.6201151656613209
-1,0.9558466713322695
-2,1.026287483490994
-3,1.3977506795154155
+Line Item,quarter_of_year,seasonal_index
+Net Transaction Volume,0,0.6201151656613209
+Net Transaction Volume,1,0.9558466713322695
+Net Transaction Volume,2,1.026287483490994
+Net Transaction Volume,3,1.3977506795154155
+Revolve Balance,0,1.1517524531508392
+Revolve Balance,1,0.9202570608968109
+Revolve Balance,2,0.9456497050446905
+Revolve Balance,3,0.98234078090766
+Outstanding Balance,0,0.910521081443899
+Outstanding Balance,1,0.9510786019793065
+Outstanding Balance,2,0.9921145292304876
+Outstanding Balance,3,1.146285787346307
+In-Month Active Accounts,0,0.8972286673615968
+In-Month Active Accounts,1,0.9943535322193396
+In-Month Active Accounts,2,0.9938316460496104
+In-Month Active Accounts,3,1.1145861543694529

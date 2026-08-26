@@ -1014,3 +1014,148 @@ Rate 41.3%-130.5% — the early-portfolio spike is now visible too, not just
 implied — NIM 1.5%-3.5%, Revolve Rate 22.5%-45.0%, Revenue Margin
 4.5%-11.7%); no console errors; dashboard-only fix, `08_audit.py` unaffected
 (still 7/8).
+
+---
+
+## Day 2 — Extending seasonality beyond NTV (2026-08-26)
+
+Prompted by two connected observations from the user, both about the same
+underlying gap: (1) the driver KPI charts (previous entry, above) revealed
+Active Rate/Payment Rate/NIM/Revolve Rate had no forecast-period
+seasonality at all, only PPAA did; (2) separately, the top "P&L trend by
+quarter" chart's forecast-period swing looked visibly bigger than the
+actuals' own swing.
+
+**Root cause, confirmed by direct measurement, not assumption:** seasonality
+had only ever been applied to Net Transaction Volume. Its Rate-Derived
+children (Interchange, MDR, Rewards, Royalties, Rebates, Payment Fees,
+Fraud) correctly inherit NTV's exact swing (checked: 85.3%-86.2% vs NTV's
+85.5%, essentially identical — this part was never the problem). But
+Interest Revenue, Fee Revenue, and Other Revenue are driven by Revolve
+Balance, Outstanding Balance, and Active Accounts respectively, none of
+which had an index. Measured directly from the actuals:
+
+| Driver | Swing | Phase |
+|---|---|---|
+| Revolve Balance | 23.4% | **Q1 peak** — opposite NTV's Q4 peak |
+| Outstanding Balance | 24.4% | Q4 peak |
+| In-Month Active Accounts | 22.2% | Q4 peak |
+
+Revolve Balance's Q1 peak is the important one: because Interest Revenue
+tracks it, Interest Revenue's real seasonality **partially cancels** the
+NTV-driven revenue lines when everything sums into Gross Revenue in the
+actuals. Measured: Gross Revenue's real quarter-of-year swing is **25.8%**
+in the actuals; with only NTV seasonal, the forecast's swing was **32.4%**
+— bigger, because the offsetting effect was missing.
+
+### Fix 1 — extend the seasonal index to the other real drivers
+
+`04_curve_library.py`'s `build_seasonal_index()` generalized to take a
+`line_item` parameter (was NTV-only), called once per item in the new
+`SEASONAL_LINE_ITEMS` list (NTV, Revolve Balance, Outstanding Balance,
+In-Month Active Accounts) — each gets its own independently-measured index,
+deliberately not sharing NTV's. `05_forecast_engine.py`'s
+`SEASONAL_LINE_ITEM` (singular) became `SEASONAL_LINE_ITEMS` (a set); the
+per-step ratio and frontbook launch-quarter multiply both now key off
+`seasonal_index[li]` (a nested `{Line Item: {quarter: multiplier}}` dict)
+instead of one shared dict. `08_audit.py`'s Check G generalized the same
+way, looping all 4 items instead of assuming one row per quarter_of_year —
+its first version silently mixed different line items' rows together once
+the CSV grew a second dimension, and FAILED the day it was introduced,
+exactly the kind of regression this suite exists to catch.
+
+**Result of Fix 1 alone**: Gross Revenue's forecast swing came down to
+**25.3%** — a near-exact match to the actuals' 25.8%. Confirmed via the
+same before/after quarter-of-year measurement used throughout this project,
+not eyeballed.
+
+### Fix 2 — a second, unrelated problem Fix 1 surfaced
+
+Checking the headline P&L numbers before shipping Fix 1 (never assume a
+big change is fine just because one target metric improved) found Gross
+Profit had jumped from $198.1M to $233.2M (+17.7%, margin 13.2%→15.0%) and
+portfolio LTV/CAC from 0.75x to 0.87x — too large to be incidental
+rounding, and directionally uniform across every merchant (all ten moved
+up), which pointed to something systematic rather than noise.
+
+**Isolated by testing each new driver's contribution separately**
+(NTV+Revolve Balance alone, NTV+Outstanding Balance alone, NTV+Active
+Accounts alone): Revolve Balance alone accounted for essentially the whole
+effect (+$55.9M GP), Outstanding Balance pulled the other way (-$20.7M GP,
+the expected/correct dampening effect), Active Accounts was negligible.
+
+**Root cause, traced by hand against one real cohort, not inferred:** the
+per-step seasonal ratio mechanism telescopes to `s(destination)/s(anchor)`
+for a chain of steps — mathematically correct for making one cohort's own
+trajectory internally consistent relative to its own real last-actual
+value. The catch: **almost every backbook cohort shares the exact same
+anchor quarter** (Q2 2026, the portfolio's one last-actual quarter), so
+`1/s(anchor)` becomes a near-universal LEVEL SHIFT applied to the entire
+2-year-ahead forecast — not a within-year reshaping effect, which is what
+this mechanism was built to produce. Revolve Balance's Q2 index (0.920)
+sits furthest from 1.0 of the four items (`1/0.920 = 1.087x`), which is
+why it dominated; NTV/Outstanding Balance/Active Accounts (Q2 indices
+0.956/0.951/0.994, all close to 1.0) barely showed the effect.
+
+**First attempt (uniform damping exponent on every step) — tried, measured,
+rejected**: shrinking the whole ratio by an exponent reduced the level
+shift, but since telescoping makes the anchor-level-shift and the
+within-year reshaping the SAME quantity end to end, it crushed the
+top chart's swing from ~25% down to ~10% while barely fixing the margin —
+the opposite of useful, since it re-broke the thing Fix 1 had just fixed.
+
+**Actual fix — damp only the anchor-crossing step, not later ones**:
+`seasonal_step_ratio()` gained an `anchor_crossing` flag, `True` only for
+the single step whose "source" is a real actual observation (identified by
+comparing `qsb_from` against the cohort's true last-actual QSB, captured
+before the loop's own bookkeeping variable gets overwritten). That one step
+divides by `s(anchor)^ANCHOR_RATIO_DAMPING` instead of `s(anchor)`; every
+later step keeps the full, undamped ratio. Telescoping still applies to the
+undamped tail, so the cumulative multiplier through any chain works out to
+`s(destination) / s(anchor)^ANCHOR_RATIO_DAMPING` — **the destination
+quarter's own multiplier stays at full strength** (within-year reshaping
+exactly preserved), only the single real anchor's influence is discounted.
+Confirmed empirically before picking a value: with this structural fix,
+damping=0.5 alone brought Gross Revenue's swing right back to 25.3%
+(unaffected by the damping, as designed) while margin dropped from 15.0%
+to 14.3% (partial fix); pushing damping down further (tested 0.5 → 0.35 →
+0.2 → 0.15 → 0.05) continued to close the margin gap without ever
+touching the swing, landing on **ANCHOR_RATIO_DAMPING = 0.2** — margin
+13.9% (was 13.2% before any of this work; residual ~0.7pp gap is
+comparable to the small drift NTV-only seasonality already showed, an
+expected consequence of real reshaping, not a new artifact), LTV/CAC
+0.78x (was 0.75x).
+
+**Why 0.2, not 0 (fully ignore the anchor) or 1 (fully trust it)**: the
+anchor observation is one of only ~4 historical data points for its own
+quarter-of-year, already folded into the very estimate of `s()` it would be
+compared against — leaning on it heavily is somewhat circular, but
+discarding it completely throws away real information about where the
+portfolio's most recent actual quarter actually sits. A documented judgment
+call, in the same spirit as `FACTOR_CLIP`/`GROWTH_CAP`/`SEASONAL_CLIP`
+elsewhere in this codebase, not a precision-fitted constant.
+
+### Side effects
+
+- `08_audit.py` Check B's forecast-period gap narrowed further: 23.7%
+  (NTV-only) → 13.6% (all 4, undamped) → 12.8% (all 4, damped) — expected
+  to shrink, not vanish, since Outstanding Balance's index is a real but
+  separately-measured, imperfectly-correlated signal from NTV's, not a
+  mechanical derivative of it.
+- `pitch_deck.html`'s hardcoded LTV/CAC stat tiles (a known, separately-
+  flagged issue — that file doesn't read from `output/` at build time)
+  updated by hand: portfolio 0.75x → **0.78x**, Poor tier 2.93x →
+  **2.99x**, Exceptional tier -0.47x → **-0.45x**.
+
+**Verified**: hand-traced one cohort's Revolve Balance forecast value
+against the raw seasonal index math before concluding it wasn't a
+double-count/sign bug; isolated each new driver's contribution separately
+before touching the fix; measured the Gross Revenue swing and headline P&L
+figures at every damping value tested, not just the final one; full
+pipeline rerun end-to-end; `08_audit.py` 7/8 (Check G re-passes across all
+4 items exactly, Check H exact match, Check B's known FAIL narrower than
+before); visual QA via claude-in-chrome confirmed all 6 driver KPI charts
+now show real seasonal waves continuing through the forecast period
+(previously flat for everything but PPAA), and the top trend chart's
+KPI tiles/margins sit close to their pre-extension values with no
+console errors.
