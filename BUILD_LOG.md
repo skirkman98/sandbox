@@ -160,6 +160,83 @@ already decided was fine.
 
 ---
 
+## Additional audit checks (post-publish)
+
+Two more checks were run against the published pipeline, after the repo was
+already on GitHub — one became a permanent automated check (Check F), the
+other is a static-analysis pass that doesn't re-run against changing data so
+it's recorded here instead.
+
+### Check F — independent trend cross-check (`08_audit.py`)
+
+The simplest possible outside forecasting method: a plain least-squares linear
+regression on actual historical Gross Revenue, with no cohort/vintage/FICO
+structure at all. Cross-validated during development against the
+finance-analyst skill's `forecast_builder.py` trend analysis, which produced
+an identical fit (slope ≈$9.26M/quarter, r²=0.929) on the same 14 actual
+quarters — confirming the regression itself, independent of which tool runs
+it.
+
+| Quarter | Naive linear trend | This model | Divergence |
+|---|---|---|---|
+| Q3 2026 | $113.6M | $129.6M | +14.0% |
+| Q4 2026 | $122.9M | $144.4M | +17.5% |
+| Q2 2027 | $141.4M | $176.1M | +24.6% |
+| Q4 2027 | $159.9M | $211.2M | +32.1% |
+| Q2 2028 | $178.4M | $250.6M | +40.4% |
+
+The divergence *growing* over the horizon is expected, not a red flag: a
+linear trend adds a constant dollar amount per quarter and mechanically
+cannot compound, while this model assumes a decelerating but still-compounding
+~9–11% QoQ growth rate. Comparing a non-compounding method against a
+compounding one will diverge more the further out you go, by construction.
+The check that actually matters — and the one Check F automates — is the
+*first* quarter: the model's near-term growth rate (11.5% QoQ) sits
+comfortably inside the range the last few actual quarters actually did (13%,
+42%, -1%, 25%), so it isn't assuming a break from recent behavior, just a
+smoother continuation of it. Check F flags a FAIL only on a sign flip or a
+>50% gap in that first quarter specifically (a real seed/sign/unit bug would
+show up immediately, not as a slow-building gap) — it passed at +14.0%.
+
+### Code quality review (`engineering-skills:code-reviewer`)
+
+Ran the bundled PR analyzer, code quality checker, and review report generator
+against `scripts/`. Two tool-chain caveats surfaced before the actual
+findings: `pr_analyzer.py` needs a diff between branches and this repo has a
+single commit, so it correctly reported "no changes" rather than anything
+about code quality; `review_report_generator.py` has a real schema bug — it
+looks for a flat top-level `issues` key that `code_quality_checker.py`'s
+actual JSON output doesn't have (findings are nested under `files[].smells[]`
+instead), so it silently reported a false 100/100 "Approve" with zero issues
+regardless of the underlying findings. Findings below are from
+`code_quality_checker.py` directly, which does not have this bug.
+
+**Overall: 89.6/100 average, grade B, 0 SOLID violations** — per the skill's
+own rubric (90+/no-high = Approve; 75+/≤2-high = Approve with suggestions),
+this is an **Approve with suggestions**, nothing blocking.
+
+| File | Score | Real finding (after discounting magic-number noise) |
+|---|---|---|
+| `05_forecast_engine.py` | 68 (D) | **Real**: `forecast_drivers` (79 lines, complexity 15) and `get_factor`/`get_rate` (6 params) — this is the file that hid both real forecasting bugs earlier, and that complexity is plausibly why |
+| `08_audit.py` | 76 (C) | `series_for`, `check_c_seam_continuity`, and a duplicated `bucket` classifier flagged for length/complexity — but the `bucket` duplication is *intentional*: 08's whole design principle is "don't import 04/05/06, recompute independently," so consolidating it would defeat the audit's purpose |
+| `01_ingest_clean.py` | 92 (A) | `parse_value` complexity 11 (parses `$`, `()`, `,`, `%`, and `-`-as-zero in one function) — minor |
+| `06_pnl_rollup.py` | 97 (A) | One false positive: the long explanatory comment documenting the LTV bug fix (item 6 above) was misflagged as commented-out code |
+| `09_build_report.py` | 63 (D) | All magic-number noise — hex color literals like `898781` parsed as decimal numbers, chart-dimension constants — not a real issue for a report-styling script |
+| everything else | 100 (A) | Clean |
+
+Manual security/hygiene sweep (the skill's universal + Python checklists) was
+clean across the board: no `eval`/`exec`, no `pickle`, no hardcoded secrets, no
+`shell=True`, no bare `except:`, no mutable default args. The 67 `print()`
+calls the checklist flags as a general risk signal are appropriate here —
+these are interactive CLI scripts meant to show progress, not a service
+leaking debug output.
+
+If there's polish time before the interview, `forecast_drivers` in
+`05_forecast_engine.py` is the one function worth an actual decomposition
+pass; everything else here is cosmetic.
+
+---
+
 ## Narrative
 
 ### The 3 biggest risks to this forecast

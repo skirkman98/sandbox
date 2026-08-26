@@ -32,6 +32,18 @@ Checks:
      within a reasonable multiple of that merchant's own historical
      CAC/account (large deviations usually mean a broken acquisition-rate
      lookup, not a real trend).
+  E. Cohort LTV magnitude sanity (regression check, independent recompute):
+     see build note in check_e_ltv_sanity below.
+  F. Independent trend cross-check: a simple linear regression on actual
+     historical Gross Revenue (no cohort/vintage structure at all -- the
+     simplest possible independent forecasting method, cross-validated
+     against the finance-analyst skill's forecast_builder.py trend_analysis
+     during development) should not wildly disagree with this model's
+     near-term forecast. The two methods are EXPECTED to diverge more over
+     the horizon (linear extrapolation can't compound; this model's ~9-11%
+     QoQ compounding growth mechanically pulls away from it), so this check
+     only flags a disagreement in the immediate next quarter or a sign
+     flip -- not the growing gap further out, which is not a red flag.
 """
 import re
 import pandas as pd
@@ -344,6 +356,53 @@ def check_e_ltv_sanity():
     )
 
 
+# ---------------------------------------------------------------------------
+# Check F: independent trend cross-check (simplest possible outside method)
+# ---------------------------------------------------------------------------
+
+def check_f_independent_trend():
+    """Simple least-squares linear regression on actual Gross Revenue by
+    quarter -- no cohort/vintage/FICO structure at all, the simplest
+    plausible independent forecasting method. Cross-validated during
+    development against the finance-analyst skill's forecast_builder.py,
+    whose trend_analysis produced an identical fit (slope ~$9.26M/quarter,
+    r-squared 0.929) on the same 14 actual quarters.
+
+    This is NOT a "the numbers should match" check -- a non-compounding
+    linear trend and this model's ~9-11% QoQ compounding growth are expected
+    to diverge more with distance (14% apart at the first forecast quarter,
+    growing past 40% by the last one, purely from arithmetic-vs-geometric
+    extrapolation). What it DOES check: the model's near-term forecast
+    should be in the same ballpark and same direction as the naive trend,
+    not already off in the very first quarter -- a real forecasting bug
+    (bad seed value, wrong sign, unit error) would show up immediately, not
+    just as a slow-building gap.
+    """
+    df = pd.read_parquet(OUT_DIR / "clean_actuals_grained.parquet")
+    revenue_items = ["Interest Revenue", "Interchange Revenue", "Merchant Discount Rate", "Fee Revenue", "Other Revenue"]
+    by_q = df[df["Line Item"].isin(revenue_items)].groupby("Report Date Index")["Value"].sum().sort_index()
+
+    t = np.array(by_q.index, dtype=float)
+    y = by_q.values
+    slope, intercept = np.polyfit(t, y, 1)
+
+    next_q_idx = FORECAST_START_IDX
+    naive_forecast = slope * next_q_idx + intercept
+
+    model_pnl = pd.read_csv(OUT_DIR / "pnl_consolidated.csv")
+    model_next_q = model_pnl[(model_pnl["Scenario"] == "Base Case") & (model_pnl["Report Date Index"] == next_q_idx)]["Gross Revenue"].iloc[0]
+
+    diff_pct = (model_next_q - naive_forecast) / naive_forecast
+    sign_flip = (naive_forecast < 0) != (model_next_q < 0)
+    status = FAIL if (sign_flip or abs(diff_pct) > 0.5) else PASS
+    record(
+        "F. Independent trend cross-check (naive linear regression vs. model, first forecast quarter only)",
+        status,
+        f"naive linear trend: ${naive_forecast:,.0f}, model: ${model_next_q:,.0f} ({diff_pct:+.1%}) -- "
+        f"divergence is expected to grow over the horizon (non-compounding vs. compounding methods), this only checks the immediate next quarter",
+    )
+
+
 def main():
     print("=" * 70)
     print("INDEPENDENT AUDIT -- recomputed via separate code paths from source")
@@ -353,6 +412,7 @@ def main():
     check_c_seam_continuity()
     check_d_cac_sanity()
     check_e_ltv_sanity()
+    check_f_independent_trend()
 
     print("\n" + "=" * 70)
     n_fail = sum(1 for _, status, _ in results if status == FAIL)
