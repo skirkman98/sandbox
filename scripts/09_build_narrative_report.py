@@ -271,7 +271,7 @@ def main():
 <html>
 <head>
 <meta charset="utf-8">
-<title>Imprint Management P&amp;L Forecast -- Q3 2026-Q2 2028</title>
+<title>Imprint P&amp;L -- Narrative Walkthrough</title>
 <style>
   body {{ font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background: #f9f9f7; color: #0b0b0b; margin: 0; padding: 0 0 4rem; }}
   .wrap {{ max-width: 980px; margin: 0 auto; padding: 2rem 1.5rem; }}
@@ -295,13 +295,23 @@ def main():
   .audit-pass {{ color: #0ca30c; font-weight: 600; }}
   .audit-fail {{ color: #d03b3b; font-weight: 600; }}
   footer {{ color: #898781; font-size: 0.8rem; margin-top: 3rem; }}
+  header.page-head {{ display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }}
+  nav.doc-links {{ font-size: 0.85rem; }}
+  nav.doc-links a {{ color: #2a78d6; text-decoration: none; margin-left: 1rem; }}
+  nav.doc-links a:hover {{ text-decoration: underline; }}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<h1>Imprint Management P&amp;L Forecast</h1>
-<p class="subtitle">Consolidated across 10 merchant programs &middot; Q3 2026 &ndash; Q2 2028 &middot; Base Case scenario</p>
+<header class="page-head">
+  <h1>Imprint Management P&amp;L &mdash; Narrative Walkthrough</h1>
+  <nav class="doc-links">
+    <a href="dashboard.html">Executive dashboard &rarr;</a>
+    <a href="pitch_deck.html">How this was built &rarr;</a>
+  </nav>
+</header>
+<p class="subtitle">Consolidated across 10 merchant programs &middot; Q3 2026 &ndash; Q2 2028 &middot; Base Case scenario &middot; the full written narrative and story, with the live filterable P&amp;L in <a href="dashboard.html">dashboard.html</a></p>
 
 <div class="stat-row">
   <div class="stat-tile"><div class="label">8Q Gross Revenue</div><div class="value">{fmt_money(headline_revenue)}</div></div>
@@ -356,9 +366,9 @@ def main():
 </body>
 </html>"""
 
-    out_path = OUT_DIR / "report.html"
+    out_path = OUT_DIR / "narrative_report.html"
     out_path.write_text(html)
-    print(f"Wrote report -> {out_path}")
+    print(f"Wrote narrative report -> {out_path}")
 
 
 if __name__ == "__main__":

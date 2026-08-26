@@ -335,4 +335,54 @@ are not the same thing here, and Merchant 2 in particular deserves scrutiny on
   dynamic above; several individual merchants and FICO tiers clear >1.9x, up to
   Merchant 5's 1.92x)
 
-Full detail, charts, and the merchant/FICO cuts are in `output/report.html`.
+Full detail, charts, and the merchant/FICO cuts are in `output/narrative_report.html`.
+
+---
+
+## Output restructure: dashboard, narrative, pitch deck
+
+The original single `report.html` read as a narrative/story document — good for
+a debrief, not for ongoing reporting. It's now three purpose-built outputs (see
+`README.md`): `dashboard.html` (executive reporting, live Merchant/Vintage/FICO
+filters), `narrative_report.html` (the original story document, unchanged in
+substance), and `pitch_deck.html` (a presentation-style methodology walkthrough
+for internal audiences who want the "how" without reading `BUILD_LOG.md` end to
+end).
+
+The dashboard needed real client-side interactivity — filtering and
+re-aggregating a P&L live, not pre-rendered charts — so `10_export_dashboard_data.py`
+ships a pre-aggregated dataset (6,860 rows at Merchant × Vintage × FICO × Report
+Date × Scenario grain) embedded inline in the HTML, and `11_build_dashboard.py`'s
+JS does the filtering, summing, and SVG rendering at view-time. Margins and
+LTV/CAC are always derived from summed dollar components client-side, never
+from averaging a pre-computed percentage — the same principle as the Python
+pipeline's own P&L rollup, now enforced in JS too.
+
+**A real bug, caught before shipping, by testing the JS logic against known
+ground truth rather than just eyeballing it.** LTV$ and CAC$ are facts about a
+*cohort* (one number per Merchant × Vintage × FICO), not a per-quarter flow —
+but an initial version merged them onto every Report-Date/Scenario row of that
+cohort in the exported data. Summing across a multi-quarter filter view then
+counted each cohort's LTV once per quarter it appeared in, inflating the ratio
+(Poor-FICO LTV/CAC came out 3.66x instead of the correct 2.97x in a JS test
+run). No browser was available in this environment to catch it visually — it
+was caught by extracting the pure aggregation functions from the built HTML and
+running them against JavaScriptCore's command-line shell (`jsc`) with assertions
+against the Python pipeline's own known-correct figures (Q3 2026 Gross Revenue,
+Merchant 1 forecast totals, LTV/CAC by FICO tier, portfolio LTV/CAC). Fixed by
+moving LTV$/CAC$ into a separate cohort-grain array (`DATA.cohorts`) instead of
+merging them into the flow-grain `DATA.rows` — structurally impossible to
+double-count once the two grains can't be conflated, rather than relying on
+every consumer to remember to deduplicate.
+
+**Visually confirmed, not just logic-tested.** The Chrome extension wasn't
+connected at first, and `file://` URLs are blocked by the browser automation
+tool for security reasons — worked around by serving `output/` over a local
+`python3 -m http.server` and driving an actual browser against it. Confirmed:
+the KPI tiles, trend chart (with the forecast-period shading), both comparison
+charts, and the data table all render correctly with no console errors;
+changing the Merchant filter to "Merchant 7" live-updated every panel to the
+correct negative Contribution Profit (-$14.2M) and LTV/CAC (-0.19x, matching
+`ltv_cac_by_merchant.csv` exactly); cross-navigation between all three HTML
+documents works. The pitch deck's inline SVG architecture diagrams also render
+cleanly.
