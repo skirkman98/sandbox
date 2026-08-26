@@ -1,0 +1,35 @@
+Family,Category,Line Item,Model Role,Driver Basis,Notes
+Volume,New Accounts,New Accounts,Driver,,Frontbook sizing driver; forecast via trailing growth trend
+Volume,Total Accounts,Total Accounts,Driver,,
+Volume,Active Accounts,In-Month Active Accounts,Driver,,
+Volume,Purchase Volume,Net Transaction Volume,Driver,,
+Volume,In-store Spend,On-Merchant Volume,Driver,,Sub-component of Net Transaction Volume
+Volume,Out-of-store Spend,Off-Merchant Volume,Driver,,Sub-component of Net Transaction Volume
+Volume,Outstanding Balance,Outstanding Balance,Driver,,Core balance driver; roll-forward QA check applies here
+Volume,Revolving Balance,Revolve Balance,Driver,,Base for interest yield rate
+Balance,EoP Interest & Fees Balance,EoP Interest & Fees Balance,Driver,,
+Volume,Payments,Principal Payments,Driver,,Runoff component in roll-forward QA check
+Revenue,Net Interest Income,Interest Revenue,Rate-Derived,Revolve Balance,Rate = quarterly yield
+Revenue,Non Interest Income,Interchange Revenue,Rate-Derived,Net Transaction Volume,Rate = interchange rate
+Revenue,Non Interest Income,Merchant Discount Rate,Rate-Derived,Net Transaction Volume,Rate = MDR rate
+Revenue,Non Interest Income,Fee Revenue,Rate-Derived,Outstanding Balance,Empirically weak driver relationship (best corr ~0.47 vs Outstanding Balance) - flag as a data gap in narrative; likely driven by delinquency/behavior fields not in this dataset
+Revenue,Other Revenue,Other Revenue,Rate-Derived,In-Month Active Accounts,Confirmed empirically: corr 0.99 vs In-Month Active Accounts
+Contra revenue,Cost of Funds,Cost of Funds,Rate-Derived,Outstanding Balance,Rate = cost-of-funds rate
+Losses,Charge-offs,Charge Offs,Rate-Derived,Outstanding Balance,Rate = quarterly loss rate; expect vintage curve shape
+Losses,Total Recoveries,Recoveries / Debt Sale,Rate-Derived,Charge Offs,Likely lagged relationship - confirm during build
+Expense,Fraud Losses,3rd Party Fraud,Rate-Derived,Net Transaction Volume,
+Expense,Rewards,Rewards,Rate-Derived,Net Transaction Volume,Cost of Sales per brief
+Expense,Royalties,Royalties,Rate-Derived,Net Transaction Volume,Confirmed empirically: corr 1.00 vs Net Transaction Volume
+Expense,Rebates,Rebates,Rate-Derived,Net Transaction Volume,Confirmed empirically: corr 1.00 vs Net Transaction Volume
+Expense,Transaction Costs,Payment Fees,Rate-Derived,Net Transaction Volume,Confirmed empirically: corr 1.00 vs Net Transaction Volume
+Expense,Servicing,Servicing & Collections,Rate-Derived,In-Month Active Accounts,"Confirmed empirically: corr 0.86 vs In-Month Active Accounts, best of tested candidates"
+Expense,Operating Expense,Program Support,Rate-Derived,Total Accounts,Confirmed empirically: corr 1.00 vs Total Accounts
+Expense,Other,Other Credits,Rate-Derived,Total Accounts,AMBIGUOUS - weak vs all candidate drivers tested (max corr 0.19); sporadic n=256 not full grain; flag as genuine data-quality gap in narrative
+Expense,Marketing,Marketing Expense,Acquisition-Cost,New Accounts,Feeds CAC; one-time at QSB=0
+Expense,Acquisition,Card Origination,Acquisition-Cost,New Accounts,Feeds CAC; one-time at QSB=0
+Expense,Acquisition,Sign-On Bonus,Acquisition-Cost,New Accounts,Feeds CAC; one-time at QSB=0
+Expense,Acquisition,Added Features,Acquisition-Cost,New Accounts,Feeds CAC; one-time at QSB=0
+Expense,Acquisition,KYC/AML and Underwriting Costs,Acquisition-Cost,New Accounts,Feeds CAC; one-time at QSB=0
+Expense,Acquisition,Acquisition Bounties,Acquisition-Cost,New Accounts,Feeds CAC; one-time at QSB=0
+Expense,Operating Expense,Partner Signing Bonus,Acquisition-Cost,Merchant (one-time),"SPECIAL CASE - occurs once per merchant (n=10) not per cohort; exclude from per-vintage CAC/account calc, treat as a fixed program-launch cost in narrative only"
+Metric,Reference,CAC / New Account,Excluded-Metric,,Pre-computed $/account ratio given in source data - do NOT sum into P&L; use only to reconcile against your own computed CAC

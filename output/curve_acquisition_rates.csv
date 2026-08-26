@@ -1,0 +1,253 @@
+Merchant,Grain FICO,Line Item,rate_per_account
+Merchant 1,Exceptional (800-850),Marketing Expense,-22.23626052872988
+Merchant 1,Fair (580-669),Marketing Expense,-11.736164736164737
+Merchant 1,Good (670-739),Marketing Expense,-15.049245637980007
+Merchant 1,Poor (300-579),Marketing Expense,-8.008916278764833
+Merchant 1,Very Good (740-799),Marketing Expense,-17.994317016281595
+Merchant 10,ALL,Marketing Expense,-14.755601596071209
+Merchant 2,Exceptional (800-850),Marketing Expense,-22.043153212832404
+Merchant 2,Fair (580-669),Marketing Expense,-11.823479627614557
+Merchant 2,Good (670-739),Marketing Expense,-14.942034076936588
+Merchant 2,Poor (300-579),Marketing Expense,-8.020984484875544
+Merchant 2,Very Good (740-799),Marketing Expense,-18.11943546446544
+Merchant 3,Exceptional (800-850),Marketing Expense,-22.066048527906556
+Merchant 3,Fair (580-669),Marketing Expense,-12.08317997791682
+Merchant 3,Good (670-739),Marketing Expense,-15.000510256148587
+Merchant 3,Poor (300-579),Marketing Expense,-7.89272579643693
+Merchant 3,Very Good (740-799),Marketing Expense,-18.023218766179458
+Merchant 4,Exceptional (800-850),Marketing Expense,-22.20353713118672
+Merchant 4,Fair (580-669),Marketing Expense,-12.102375216014734
+Merchant 4,Good (670-739),Marketing Expense,-15.361622389458095
+Merchant 4,Poor (300-579),Marketing Expense,-8.012365607772669
+Merchant 4,Very Good (740-799),Marketing Expense,-18.063258530671845
+Merchant 5,Exceptional (800-850),Marketing Expense,-21.911837543338287
+Merchant 5,Fair (580-669),Marketing Expense,-12.04460171946991
+Merchant 5,Good (670-739),Marketing Expense,-14.927634896621282
+Merchant 5,Poor (300-579),Marketing Expense,-8.02773419707475
+Merchant 5,Very Good (740-799),Marketing Expense,-18.029157032566523
+Merchant 6,Exceptional (800-850),Marketing Expense,-22.079903378571654
+Merchant 6,Fair (580-669),Marketing Expense,-11.965250556202987
+Merchant 6,Good (670-739),Marketing Expense,-14.686625766871165
+Merchant 6,Poor (300-579),Marketing Expense,-7.824001258257313
+Merchant 6,Very Good (740-799),Marketing Expense,-18.312902932897483
+Merchant 7,Exceptional (800-850),Marketing Expense,-22.090133982947624
+Merchant 7,Fair (580-669),Marketing Expense,-12.011271392378884
+Merchant 7,Good (670-739),Marketing Expense,-14.813909721637033
+Merchant 7,Poor (300-579),Marketing Expense,-7.999688909628247
+Merchant 7,Very Good (740-799),Marketing Expense,-17.779959986050184
+Merchant 8,Exceptional (800-850),Marketing Expense,-22.36742735183057
+Merchant 8,Fair (580-669),Marketing Expense,-11.90614713312409
+Merchant 8,Good (670-739),Marketing Expense,-15.237718430596768
+Merchant 8,Poor (300-579),Marketing Expense,-8.03364363873918
+Merchant 8,Very Good (740-799),Marketing Expense,-17.662011453833014
+Merchant 9,ALL,Marketing Expense,-13.956101384896787
+Merchant 1,Exceptional (800-850),Card Origination,-7.998394629305312
+Merchant 1,Fair (580-669),Card Origination,-7.043472043472043
+Merchant 1,Good (670-739),Card Origination,-6.950459257073296
+Merchant 1,Poor (300-579),Card Origination,-6.019143774995083
+Merchant 1,Very Good (740-799),Card Origination,-8.014754484466765
+Merchant 10,ALL,Card Origination,-7.1880755064456725
+Merchant 2,Exceptional (800-850),Card Origination,-7.97050115588963
+Merchant 2,Fair (580-669),Card Origination,-7.028896143150768
+Merchant 2,Good (670-739),Card Origination,-7.0333450436208205
+Merchant 2,Poor (300-579),Card Origination,-5.965509543475834
+Merchant 2,Very Good (740-799),Card Origination,-8.057081280143958
+Merchant 3,Exceptional (800-850),Card Origination,-7.915888975856463
+Merchant 3,Fair (580-669),Card Origination,-6.980882894195588
+Merchant 3,Good (670-739),Card Origination,-7.030309215226043
+Merchant 3,Poor (300-579),Card Origination,-6.034293356259254
+Merchant 3,Very Good (740-799),Card Origination,-8.016249153689913
+Merchant 4,Exceptional (800-850),Card Origination,-7.984617390170773
+Merchant 4,Fair (580-669),Card Origination,-6.943375758416691
+Merchant 4,Good (670-739),Card Origination,-6.969706128288049
+Merchant 4,Poor (300-579),Card Origination,-6.043005512746323
+Merchant 4,Very Good (740-799),Card Origination,-8.037911035803337
+Merchant 5,Exceptional (800-850),Card Origination,-7.9784900587278
+Merchant 5,Fair (580-669),Card Origination,-6.953878307129625
+Merchant 5,Good (670-739),Card Origination,-7.020675743822491
+Merchant 5,Poor (300-579),Card Origination,-5.979553621134673
+Merchant 5,Very Good (740-799),Card Origination,-8.035427362150722
+Merchant 6,Exceptional (800-850),Card Origination,-7.975081842163812
+Merchant 6,Fair (580-669),Card Origination,-6.936822403503196
+Merchant 6,Good (670-739),Card Origination,-7.006625766871165
+Merchant 6,Poor (300-579),Card Origination,-5.9680717206668765
+Merchant 6,Very Good (740-799),Card Origination,-7.977617361300282
+Merchant 7,Exceptional (800-850),Card Origination,-8.023696157679105
+Merchant 7,Fair (580-669),Card Origination,-6.995501783775399
+Merchant 7,Good (670-739),Card Origination,-6.981826353192326
+Merchant 7,Poor (300-579),Card Origination,-6.010265982267849
+Merchant 7,Very Good (740-799),Card Origination,-8.038765808263431
+Merchant 8,Exceptional (800-850),Card Origination,-7.997044820226564
+Merchant 8,Fair (580-669),Card Origination,-7.051978871622139
+Merchant 8,Good (670-739),Card Origination,-7.068908671282559
+Merchant 8,Poor (300-579),Card Origination,-6.04442266862649
+Merchant 8,Very Good (740-799),Card Origination,-8.057871998392445
+Merchant 9,ALL,Card Origination,-7.085619719536626
+Merchant 1,Exceptional (800-850),Sign-On Bonus,-27.893941289300308
+Merchant 1,Fair (580-669),Sign-On Bonus,-15.888459888459888
+Merchant 1,Good (670-739),Sign-On Bonus,-20.126526245896198
+Merchant 1,Poor (300-579),Sign-On Bonus,-9.988854651543958
+Merchant 1,Very Good (740-799),Sign-On Bonus,-24.182463284734197
+Merchant 10,ALL,Sign-On Bonus,-19.599063842848373
+Merchant 2,Exceptional (800-850),Sign-On Bonus,-27.85666968594952
+Merchant 2,Fair (580-669),Sign-On Bonus,-15.936404304195381
+Merchant 2,Good (670-739),Sign-On Bonus,-20.163504889045026
+Merchant 2,Poor (300-579),Sign-On Bonus,-10.003906686014064
+Merchant 2,Very Good (740-799),Sign-On Bonus,-23.90037977464612
+Merchant 3,Exceptional (800-850),Sign-On Bonus,-27.99987958335842
+Merchant 3,Fair (580-669),Sign-On Bonus,-15.985624282837906
+Merchant 3,Good (670-739),Sign-On Bonus,-20.26312208728782
+Merchant 3,Poor (300-579),Sign-On Bonus,-9.968476859148875
+Merchant 3,Very Good (740-799),Sign-On Bonus,-23.929467521605797
+Merchant 4,Exceptional (800-850),Sign-On Bonus,-28.338982314344065
+Merchant 4,Fair (580-669),Sign-On Bonus,-16.15664063978203
+Merchant 4,Good (670-739),Sign-On Bonus,-20.19826517967782
+Merchant 4,Poor (300-579),Sign-On Bonus,-9.94761368135717
+Merchant 4,Very Good (740-799),Sign-On Bonus,-24.129988566075685
+Merchant 5,Exceptional (800-850),Sign-On Bonus,-27.9636312177174
+Merchant 5,Fair (580-669),Sign-On Bonus,-15.867809813328266
+Merchant 5,Good (670-739),Sign-On Bonus,-19.909480584972265
+Merchant 5,Poor (300-579),Sign-On Bonus,-9.882079052583633
+Merchant 5,Very Good (740-799),Sign-On Bonus,-24.0757142297292
+Merchant 6,Exceptional (800-850),Sign-On Bonus,-27.904522772780727
+Merchant 6,Fair (580-669),Sign-On Bonus,-16.06455486103754
+Merchant 6,Good (670-739),Sign-On Bonus,-19.85398773006135
+Merchant 6,Poor (300-579),Sign-On Bonus,-9.890688895879208
+Merchant 6,Very Good (740-799),Sign-On Bonus,-24.221147734495595
+Merchant 7,Exceptional (800-850),Sign-On Bonus,-27.72871221348688
+Merchant 7,Fair (580-669),Sign-On Bonus,-15.971769815418025
+Merchant 7,Good (670-739),Sign-On Bonus,-20.003370691834498
+Merchant 7,Poor (300-579),Sign-On Bonus,-9.894229273603981
+Merchant 7,Very Good (740-799),Sign-On Bonus,-24.048383840237882
+Merchant 8,Exceptional (800-850),Sign-On Bonus,-28.09390904613364
+Merchant 8,Fair (580-669),Sign-On Bonus,-16.127229579729004
+Merchant 8,Good (670-739),Sign-On Bonus,-19.700626442466206
+Merchant 8,Poor (300-579),Sign-On Bonus,-10.073493385595297
+Merchant 8,Very Good (740-799),Sign-On Bonus,-23.766703506480457
+Merchant 9,ALL,Sign-On Bonus,-18.175536393461662
+Merchant 1,Exceptional (800-850),Added Features,-1.4919522975565007
+Merchant 1,Fair (580-669),Added Features,-0.7862147862147862
+Merchant 1,Good (670-739),Added Features,-1.0146999151573277
+Merchant 1,Poor (300-579),Added Features,-0.49891824559103126
+Merchant 1,Very Good (740-799),Added Features,-1.190159624983855
+Merchant 10,ALL,Added Features,-1.008670963781461
+Merchant 2,Exceptional (800-850),Added Features,-1.520231448309427
+Merchant 2,Fair (580-669),Added Features,-0.7899891186071817
+Merchant 2,Good (670-739),Added Features,-0.9811757128637508
+Merchant 2,Poor (300-579),Added Features,-0.5000558098002009
+Merchant 2,Very Good (740-799),Added Features,-1.2029335760543194
+Merchant 3,Exceptional (800-850),Added Features,-1.4772111505810104
+Merchant 3,Fair (580-669),Added Features,-0.8025720409621339
+Merchant 3,Good (670-739),Added Features,-1.0021430758240637
+Merchant 3,Poor (300-579),Added Features,-0.5005492668481636
+Merchant 3,Very Good (740-799),Added Features,-1.2023577203393205
+Merchant 4,Exceptional (800-850),Added Features,-1.5134923738756354
+Merchant 4,Fair (580-669),Added Features,-0.8098187368341385
+Merchant 4,Good (670-739),Added Features,-0.9966653569881424
+Merchant 4,Poor (300-579),Added Features,-0.49218773794657816
+Merchant 4,Very Good (740-799),Added Features,-1.1807248832499897
+Merchant 5,Exceptional (800-850),Added Features,-1.529045496356046
+Merchant 5,Fair (580-669),Added Features,-0.8138982567805063
+Merchant 5,Good (670-739),Added Features,-1.0090771558245084
+Merchant 5,Poor (300-579),Added Features,-0.5005314034111038
+Merchant 5,Very Good (740-799),Added Features,-1.2062546537602383
+Merchant 6,Exceptional (800-850),Added Features,-1.5023996440263165
+Merchant 6,Fair (580-669),Added Features,-0.7956351308401314
+Merchant 6,Good (670-739),Added Features,-0.9874846625766871
+Merchant 6,Poor (300-579),Added Features,-0.4962252280591381
+Merchant 6,Very Good (740-799),Added Features,-1.1831471896849177
+Merchant 7,Exceptional (800-850),Added Features,-1.471597829697708
+Merchant 7,Fair (580-669),Added Features,-0.8003722661703118
+Merchant 7,Good (670-739),Added Features,-0.9923878542737563
+Merchant 7,Poor (300-579),Added Features,-0.5101882096749105
+Merchant 7,Very Good (740-799),Added Features,-1.191424533323544
+Merchant 8,Exceptional (800-850),Added Features,-1.5334099491052373
+Merchant 8,Fair (580-669),Added Features,-0.8030314629105106
+Merchant 8,Good (670-739),Added Features,-1.0240685789647215
+Merchant 8,Poor (300-579),Added Features,-0.5177200718601992
+Merchant 8,Very Good (740-799),Added Features,-1.1966241334271075
+Merchant 9,ALL,Added Features,-0.9194901721685103
+Merchant 1,Exceptional (800-850),KYC/AML and Underwriting Costs,-18.043741139187723
+Merchant 1,Fair (580-669),KYC/AML and Underwriting Costs,-13.926783926783926
+Merchant 1,Good (670-739),KYC/AML and Underwriting Costs,-14.914327345162123
+Merchant 1,Poor (300-579),KYC/AML and Underwriting Costs,-11.935684783321314
+Merchant 1,Very Good (740-799),KYC/AML and Underwriting Costs,-16.0474392384194
+Merchant 10,ALL,KYC/AML and Underwriting Costs,-15.001534683855127
+Merchant 2,Exceptional (800-850),KYC/AML and Underwriting Costs,-17.88411361516311
+Merchant 2,Fair (580-669),KYC/AML and Underwriting Costs,-13.972917422318945
+Merchant 2,Good (670-739),KYC/AML and Underwriting Costs,-15.132326248609404
+Merchant 2,Poor (300-579),KYC/AML and Underwriting Costs,-12.011385199240987
+Merchant 2,Very Good (740-799),KYC/AML and Underwriting Costs,-16.025234612849566
+Merchant 3,Exceptional (800-850),KYC/AML and Underwriting Costs,-18.003191041001866
+Merchant 3,Fair (580-669),KYC/AML and Underwriting Costs,-14.044902465955097
+Merchant 3,Good (670-739),KYC/AML and Underwriting Costs,-14.993536755451236
+Merchant 3,Poor (300-579),KYC/AML and Underwriting Costs,-12.073840569327029
+Merchant 3,Very Good (740-799),KYC/AML and Underwriting Costs,-15.988291051017564
+Merchant 4,Exceptional (800-850),KYC/AML and Underwriting Costs,-18.147134228479555
+Merchant 4,Fair (580-669),KYC/AML and Underwriting Costs,-14.051742623964076
+Merchant 4,Good (670-739),KYC/AML and Underwriting Costs,-14.995214636161231
+Merchant 4,Poor (300-579),KYC/AML and Underwriting Costs,-12.090884171412908
+Merchant 4,Very Good (740-799),KYC/AML and Underwriting Costs,-16.010111446322547
+Merchant 5,Exceptional (800-850),KYC/AML and Underwriting Costs,-17.899950470529966
+Merchant 5,Fair (580-669),KYC/AML and Underwriting Costs,-14.035766874079703
+Merchant 5,Good (670-739),KYC/AML and Underwriting Costs,-15.044125063035805
+Merchant 5,Poor (300-579),KYC/AML and Underwriting Costs,-11.919125461814868
+Merchant 5,Very Good (740-799),KYC/AML and Underwriting Costs,-15.90508288591919
+Merchant 6,Exceptional (800-850),KYC/AML and Underwriting Costs,-17.881638750278103
+Merchant 6,Fair (580-669),KYC/AML and Underwriting Costs,-13.899424374050923
+Merchant 6,Good (670-739),KYC/AML and Underwriting Costs,-14.962453987730061
+Merchant 6,Poor (300-579),KYC/AML and Underwriting Costs,-12.050173010380623
+Merchant 6,Very Good (740-799),KYC/AML and Underwriting Costs,-16.11867792608735
+Merchant 7,Exceptional (800-850),KYC/AML and Underwriting Costs,-17.870224781308824
+Merchant 7,Fair (580-669),KYC/AML and Underwriting Costs,-13.895351843234579
+Merchant 7,Good (670-739),KYC/AML and Underwriting Costs,-15.082160613465915
+Merchant 7,Poor (300-579),KYC/AML and Underwriting Costs,-11.919427593715975
+Merchant 7,Very Good (740-799),KYC/AML and Underwriting Costs,-15.915456764743672
+Merchant 8,Exceptional (800-850),KYC/AML and Underwriting Costs,-17.957642423247414
+Merchant 8,Fair (580-669),KYC/AML and Underwriting Costs,-13.973053663017684
+Merchant 8,Good (670-739),KYC/AML and Underwriting Costs,-15.104516979887899
+Merchant 8,Poor (300-579),KYC/AML and Underwriting Costs,-11.994120529152376
+Merchant 8,Very Good (740-799),KYC/AML and Underwriting Costs,-15.994172611272983
+Merchant 9,ALL,KYC/AML and Underwriting Costs,-14.547513282815085
+Merchant 1,Exceptional (800-850),Acquisition Bounties,-38.28892502710366
+Merchant 1,Fair (580-669),Acquisition Bounties,-20.25868725868726
+Merchant 1,Good (670-739),Acquisition Bounties,-26.019679811132836
+Merchant 1,Poor (300-579),Acquisition Bounties,-14.086737035337311
+Merchant 1,Very Good (740-799),Acquisition Bounties,-31.812324780999994
+Merchant 10,ALL,Acquisition Bounties,-25.877839165131984
+Merchant 2,Exceptional (800-850),Acquisition Bounties,-37.67875731725452
+Merchant 2,Fair (580-669),Acquisition Bounties,-20.00797968806674
+Merchant 2,Good (670-739),Acquisition Bounties,-25.85192341471983
+Merchant 2,Poor (300-579),Acquisition Bounties,-13.970309186293113
+Merchant 2,Very Good (740-799),Acquisition Bounties,-31.78358076226944
+Merchant 3,Exceptional (800-850),Acquisition Bounties,-38.23318682641941
+Merchant 3,Fair (580-669),Acquisition Bounties,-20.194851588040443
+Merchant 3,Good (670-739),Acquisition Bounties,-25.888526040072115
+Merchant 3,Poor (300-579),Acquisition Bounties,-13.856808520800497
+Merchant 3,Very Good (740-799),Acquisition Bounties,-32.00346489306623
+Merchant 4,Exceptional (800-850),Acquisition Bounties,-37.5813670534046
+Merchant 4,Fair (580-669),Acquisition Bounties,-19.92078408617884
+Merchant 4,Good (670-739),Acquisition Bounties,-25.78192845125477
+Merchant 4,Poor (300-579),Acquisition Bounties,-13.96795906557427
+Merchant 4,Very Good (740-799),Acquisition Bounties,-31.866622584066896
+Merchant 5,Exceptional (800-850),Acquisition Bounties,-38.068350668647845
+Merchant 5,Fair (580-669),Acquisition Bounties,-19.87840212796276
+Merchant 5,Good (670-739),Acquisition Bounties,-26.118003025718608
+Merchant 5,Poor (300-579),Acquisition Bounties,-14.325117667898173
+Merchant 5,Very Good (740-799),Acquisition Bounties,-32.19148018967747
+Merchant 6,Exceptional (800-850),Acquisition Bounties,-38.48933668118107
+Merchant 6,Fair (580-669),Acquisition Bounties,-19.731256842179608
+Merchant 6,Good (670-739),Acquisition Bounties,-26.299141104294478
+Merchant 6,Poor (300-579),Acquisition Bounties,-13.848694558037119
+Merchant 6,Very Good (740-799),Acquisition Bounties,-32.48524471079633
+Merchant 7,Exceptional (800-850),Acquisition Bounties,-38.6389104196656
+Merchant 7,Fair (580-669),Acquisition Bounties,-19.93381934750013
+Merchant 7,Good (670-739),Acquisition Bounties,-25.723715625965564
+Merchant 7,Poor (300-579),Acquisition Bounties,-14.131280136879763
+Merchant 7,Very Good (740-799),Acquisition Bounties,-32.27308602999211
+Merchant 8,Exceptional (800-850),Acquisition Bounties,-38.128386143490395
+Merchant 8,Fair (580-669),Acquisition Bounties,-20.08726938681773
+Merchant 8,Good (670-739),Acquisition Bounties,-25.812067260138477
+Merchant 8,Poor (300-579),Acquisition Bounties,-14.208721215090641
+Merchant 8,Very Good (740-799),Acquisition Bounties,-31.819551893901338
+Merchant 9,ALL,Acquisition Bounties,-23.821676392880992

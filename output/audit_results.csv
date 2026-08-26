@@ -1,0 +1,6 @@
+Check,Status,Detail
+A. Actuals Gross Profit reconciliation vs. raw source CSV,PASS,max abs diff $0.00 (0.0000%) across 14 actual quarters
+B. Roll-forward identity (Beginning + NTV + Payments + ChargeOffs vs. Ending OS),FAIL,"max gap 44.3% whole-portfolio, but only 5.0% for continuing (QSB>=1) cohorts -- the gap is explained by new-cohort originations carrying balance beyond their own NTV, not a modeling error"
+C. Actual/forecast seam continuity (backbook cohorts),PASS,"0 cohort-line-item seams outside [0.50, 2.00] ratio band"
+"D. Forecast CAC/account vs. historical CAC/account, per merchant",PASS,"0 merchant(s) outside [0.5x, 2.0x] of their own historical CAC"
+"E. Cohort LTV magnitude sanity (regression check, independent recompute)",PASS,"0/785 cohorts outside [-1000, 1000] undiscounted 12Q CP/account -- max abs value seen: 380"

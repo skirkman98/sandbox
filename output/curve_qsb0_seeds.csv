@@ -1,0 +1,379 @@
+Line Item,Merchant,Grain FICO,seed_ratio
+EoP Interest & Fees Balance,Merchant 1,Exceptional (800-850),6.504148945042115
+EoP Interest & Fees Balance,Merchant 1,Fair (580-669),24.782496782496782
+EoP Interest & Fees Balance,Merchant 1,Good (670-739),16.392157586041535
+EoP Interest & Fees Balance,Merchant 1,Poor (300-579),26.89995410738871
+EoP Interest & Fees Balance,Merchant 1,Very Good (740-799),10.568070444685878
+EoP Interest & Fees Balance,Merchant 10,ALL,18.232811540822592
+EoP Interest & Fees Balance,Merchant 2,Exceptional (800-850),5.503386553826603
+EoP Interest & Fees Balance,Merchant 2,Fair (580-669),23.399830733889495
+EoP Interest & Fees Balance,Merchant 2,Good (670-739),15.09748814333392
+EoP Interest & Fees Balance,Merchant 2,Poor (300-579),25.700971090523495
+EoP Interest & Fees Balance,Merchant 2,Very Good (740-799),9.469780191038156
+EoP Interest & Fees Balance,Merchant 3,Exceptional (800-850),7.153651634655909
+EoP Interest & Fees Balance,Merchant 3,Fair (580-669),26.87523003312477
+EoP Interest & Fees Balance,Merchant 3,Good (670-739),17.642956764295675
+EoP Interest & Fees Balance,Merchant 3,Poor (300-579),28.405693270287053
+EoP Interest & Fees Balance,Merchant 3,Very Good (740-799),11.370823210800909
+EoP Interest & Fees Balance,Merchant 4,Exceptional (800-850),8.02850562725416
+EoP Interest & Fees Balance,Merchant 4,Fair (580-669),27.889047264654312
+EoP Interest & Fees Balance,Merchant 4,Good (670-739),18.62796062904867
+EoP Interest & Fees Balance,Merchant 4,Poor (300-579),29.655834069381417
+EoP Interest & Fees Balance,Merchant 4,Very Good (740-799),12.057693102450717
+EoP Interest & Fees Balance,Merchant 5,Exceptional (800-850),7.825656265477959
+EoP Interest & Fees Balance,Merchant 5,Fair (580-669),30.04417422695103
+EoP Interest & Fees Balance,Merchant 5,Good (670-739),20.283913262733233
+EoP Interest & Fees Balance,Merchant 5,Poor (300-579),31.130117920947416
+EoP Interest & Fees Balance,Merchant 5,Very Good (740-799),13.017596112395658
+EoP Interest & Fees Balance,Merchant 6,Exceptional (800-850),8.675905031306614
+EoP Interest & Fees Balance,Merchant 6,Fair (580-669),28.060529010841545
+EoP Interest & Fees Balance,Merchant 6,Good (670-739),19.270184049079756
+EoP Interest & Fees Balance,Merchant 6,Poor (300-579),29.116074237181504
+EoP Interest & Fees Balance,Merchant 6,Very Good (740-799),12.896803777354036
+EoP Interest & Fees Balance,Merchant 7,Exceptional (800-850),5.115269626840881
+EoP Interest & Fees Balance,Merchant 7,Fair (580-669),21.84995605191045
+EoP Interest & Fees Balance,Merchant 7,Good (670-739),14.0538187129575
+EoP Interest & Fees Balance,Merchant 7,Poor (300-579),24.112614714574583
+EoP Interest & Fees Balance,Merchant 7,Very Good (740-799),8.613094473302619
+EoP Interest & Fees Balance,Merchant 8,Exceptional (800-850),7.212280413725169
+EoP Interest & Fees Balance,Merchant 8,Fair (580-669),25.868483503023807
+EoP Interest & Fees Balance,Merchant 8,Good (670-739),17.56478733926805
+EoP Interest & Fees Balance,Merchant 8,Poor (300-579),27.891556426588274
+EoP Interest & Fees Balance,Merchant 8,Very Good (740-799),11.490003014166582
+EoP Interest & Fees Balance,Merchant 9,ALL,24.014458670847485
+In-Month Active Accounts,Merchant 1,Exceptional (800-850),0.7336752564423318
+In-Month Active Accounts,Merchant 1,Fair (580-669),0.5738309738309738
+In-Month Active Accounts,Merchant 1,Good (670-739),0.6343557490132429
+In-Month Active Accounts,Merchant 1,Poor (300-579),0.4901986494460106
+In-Month Active Accounts,Merchant 1,Very Good (740-799),0.692678220040875
+In-Month Active Accounts,Merchant 10,ALL,0.5906998158379374
+In-Month Active Accounts,Merchant 2,Exceptional (800-850),0.7390798848166124
+In-Month Active Accounts,Merchant 2,Fair (580-669),0.5747309877886592
+In-Month Active Accounts,Merchant 2,Good (670-739),0.6326629193746707
+In-Month Active Accounts,Merchant 2,Poor (300-579),0.497376939390557
+In-Month Active Accounts,Merchant 2,Very Good (740-799),0.6960338135442495
+In-Month Active Accounts,Merchant 3,Exceptional (800-850),0.7277981817087121
+In-Month Active Accounts,Merchant 3,Fair (580-669),0.5704171989001711
+In-Month Active Accounts,Merchant 3,Good (670-739),0.6274109603020717
+In-Month Active Accounts,Merchant 3,Poor (300-579),0.48865644552705734
+In-Month Active Accounts,Merchant 3,Very Good (740-799),0.6910470349277151
+In-Month Active Accounts,Merchant 4,Exceptional (800-850),0.738213183852605
+In-Month Active Accounts,Merchant 4,Fair (580-669),0.5788564148491997
+In-Month Active Accounts,Merchant 4,Good (670-739),0.6330280774926709
+In-Month Active Accounts,Merchant 4,Poor (300-579),0.49322328145463407
+In-Month Active Accounts,Merchant 4,Very Good (740-799),0.6954443388298825
+In-Month Active Accounts,Merchant 5,Exceptional (800-850),0.7318332979551404
+In-Month Active Accounts,Merchant 5,Fair (580-669),0.5784448772146488
+In-Month Active Accounts,Merchant 5,Good (670-739),0.6361069087241553
+In-Month Active Accounts,Merchant 5,Poor (300-579),0.4908649223138823
+In-Month Active Accounts,Merchant 5,Very Good (740-799),0.6963984794450758
+In-Month Active Accounts,Merchant 6,Exceptional (800-850),0.7446524489082414
+In-Month Active Accounts,Merchant 6,Fair (580-669),0.5823710138785888
+In-Month Active Accounts,Merchant 6,Good (670-739),0.6399754601226993
+In-Month Active Accounts,Merchant 6,Poor (300-579),0.5025951557093425
+In-Month Active Accounts,Merchant 6,Very Good (740-799),0.6977208753291565
+In-Month Active Accounts,Merchant 7,Exceptional (800-850),0.7246152142619865
+In-Month Active Accounts,Merchant 7,Fair (580-669),0.5619668062664805
+In-Month Active Accounts,Merchant 7,Good (670-739),0.6266116120333699
+In-Month Active Accounts,Merchant 7,Poor (300-579),0.48934515476745993
+In-Month Active Accounts,Merchant 7,Very Good (740-799),0.6851379379967328
+In-Month Active Accounts,Merchant 8,Exceptional (800-850),0.7327204071581022
+In-Month Active Accounts,Merchant 8,Fair (580-669),0.5685523999081374
+In-Month Active Accounts,Merchant 8,Good (670-739),0.6288163534454335
+In-Month Active Accounts,Merchant 8,Poor (300-579),0.4945288257390168
+In-Month Active Accounts,Merchant 8,Very Good (740-799),0.6901436752737868
+In-Month Active Accounts,Merchant 9,ALL,0.6077577446796156
+Net Transaction Volume,Merchant 1,Exceptional (800-850),1511.105203902927
+Net Transaction Volume,Merchant 1,Fair (580-669),627.4932074932075
+Net Transaction Volume,Merchant 1,Good (670-739),885.4919030580251
+Net Transaction Volume,Merchant 1,Poor (300-579),388.5071789156232
+Net Transaction Volume,Merchant 1,Very Good (740-799),1166.1011540711588
+Net Transaction Volume,Merchant 10,ALL,570.8486801718846
+Net Transaction Volume,Merchant 2,Exceptional (800-850),1876.9890089091375
+Net Transaction Volume,Merchant 2,Fair (580-669),691.2489420868093
+Net Transaction Volume,Merchant 2,Good (670-739),1011.3194566426606
+Net Transaction Volume,Merchant 2,Poor (300-579),420.72217881459983
+Net Transaction Volume,Merchant 2,Very Good (740-799),1472.4208279715012
+Net Transaction Volume,Merchant 3,Exceptional (800-850),1312.9357577217172
+Net Transaction Volume,Merchant 3,Fair (580-669),547.5676026759618
+Net Transaction Volume,Merchant 3,Good (670-739),777.5079089703031
+Net Transaction Volume,Merchant 3,Poor (300-579),342.2505612074318
+Net Transaction Volume,Merchant 3,Very Good (740-799),1019.686168306185
+Net Transaction Volume,Merchant 4,Exceptional (800-850),876.1113283796116
+Net Transaction Volume,Merchant 4,Fair (580-669),443.8033729833369
+Net Transaction Volume,Merchant 4,Good (670-739),586.401507137748
+Net Transaction Volume,Merchant 4,Poor (300-579),284.01912709773706
+Net Transaction Volume,Merchant 4,Very Good (740-799),748.515656210825
+Net Transaction Volume,Merchant 5,Exceptional (800-850),1170.529965329371
+Net Transaction Volume,Merchant 5,Fair (580-669),525.8561725169809
+Net Transaction Volume,Merchant 5,Good (670-739),707.4029248613213
+Net Transaction Volume,Merchant 5,Poor (300-579),326.78273191963154
+Net Transaction Volume,Merchant 5,Very Good (740-799),936.2542618646393
+Net Transaction Volume,Merchant 6,Exceptional (800-850),1639.2747036201251
+Net Transaction Volume,Merchant 6,Fair (580-669),646.5762616096338
+Net Transaction Volume,Merchant 6,Good (670-739),923.8871165644172
+Net Transaction Volume,Merchant 6,Poor (300-579),396.1229946524064
+Net Transaction Volume,Merchant 6,Very Good (740-799),1279.1632615999274
+Net Transaction Volume,Merchant 7,Exceptional (800-850),1963.4614106964898
+Net Transaction Volume,Merchant 7,Fair (580-669),665.6636161522155
+Net Transaction Volume,Merchant 7,Good (670-739),1054.318698912952
+Net Transaction Volume,Merchant 7,Poor (300-579),420.09643801524345
+Net Transaction Volume,Merchant 7,Very Good (740-799),1558.0165562306124
+Net Transaction Volume,Merchant 8,Exceptional (800-850),714.3326219011657
+Net Transaction Volume,Merchant 8,Fair (580-669),343.42800275587535
+Net Transaction Volume,Merchant 8,Good (670-739),458.97131552917904
+Net Transaction Volume,Merchant 8,Poor (300-579),237.75926833251674
+Net Transaction Volume,Merchant 8,Very Good (740-799),597.8298000602833
+Net Transaction Volume,Merchant 9,ALL,377.2145283511889
+Off-Merchant Volume,Merchant 1,Exceptional (800-850),241.77612375948627
+Off-Merchant Volume,Merchant 1,Fair (580-669),100.3989703989704
+Off-Merchant Volume,Merchant 1,Good (670-739),141.67896270611237
+Off-Merchant Volume,Merchant 1,Poor (300-579),62.16482003540287
+Off-Merchant Volume,Merchant 1,Very Good (740-799),186.57585035822552
+Off-Merchant Volume,Merchant 10,ALL,97.04573357888275
+Off-Merchant Volume,Merchant 2,Exceptional (800-850),412.9351485081588
+Off-Merchant Volume,Merchant 2,Fair (580-669),152.07592794099867
+Off-Merchant Volume,Merchant 2,Good (670-739),222.48960711985478
+Off-Merchant Volume,Merchant 2,Poor (300-579),92.56055363321799
+Off-Merchant Volume,Merchant 2,Very Good (740-799),323.93207997238005
+Off-Merchant Volume,Merchant 3,Exceptional (800-850),236.32970076464568
+Off-Merchant Volume,Merchant 3,Fair (580-669),98.56242828379051
+Off-Merchant Volume,Merchant 3,Good (670-739),139.94795387284418
+Off-Merchant Volume,Merchant 3,Poor (300-579),61.60385919663753
+Off-Merchant Volume,Merchant 3,Very Good (740-799),183.5437492532558
+Off-Merchant Volume,Merchant 4,Exceptional (800-850),105.1340546647547
+Off-Merchant Volume,Merchant 4,Fair (580-669),53.2563038460083
+Off-Merchant Volume,Merchant 4,Good (670-739),70.36902711034546
+Off-Merchant Volume,Merchant 4,Poor (300-579),34.08156427984041
+Off-Merchant Volume,Merchant 4,Very Good (740-799),89.823807359039
+Off-Merchant Volume,Merchant 5,Exceptional (800-850),234.1045779381589
+Off-Merchant Volume,Merchant 5,Fair (580-669),105.1702845200209
+Off-Merchant Volume,Merchant 5,Good (670-739),141.48260211800303
+Off-Merchant Volume,Merchant 5,Poor (300-579),65.3626195657675
+Off-Merchant Volume,Merchant 5,Very Good (740-799),187.25163616412587
+Off-Merchant Volume,Merchant 6,Exceptional (800-850),245.89200012713346
+Off-Merchant Volume,Merchant 6,Fair (580-669),96.98767524808419
+Off-Merchant Volume,Merchant 6,Good (670-739),138.58650306748467
+Off-Merchant Volume,Merchant 6,Poor (300-579),59.40547341931425
+Off-Merchant Volume,Merchant 6,Very Good (740-799),191.87551076001088
+Off-Merchant Volume,Merchant 7,Exceptional (800-850),549.768574908648
+Off-Merchant Volume,Merchant 7,Fair (580-669),186.38643296623752
+Off-Merchant Volume,Merchant 7,Good (670-739),295.20519086542515
+Off-Merchant Volume,Merchant 7,Poor (300-579),117.62326955980713
+Off-Merchant Volume,Merchant 7,Very Good (740-799),436.2456636258512
+Off-Merchant Volume,Merchant 8,Exceptional (800-850),171.43326219011658
+Off-Merchant Volume,Merchant 8,Fair (580-669),82.42363928653448
+Off-Merchant Volume,Merchant 8,Good (670-739),110.15496208374546
+Off-Merchant Volume,Merchant 8,Poor (300-579),57.07986281234689
+Off-Merchant Volume,Merchant 8,Very Good (740-799),143.48437656987844
+Off-Merchant Volume,Merchant 9,ALL,75.44058299218999
+On-Merchant Volume,Merchant 1,Exceptional (800-850),1269.329080143441
+On-Merchant Volume,Merchant 1,Fair (580-669),527.0942370942371
+On-Merchant Volume,Merchant 1,Good (670-739),743.8129403519126
+On-Merchant Volume,Merchant 1,Poor (300-579),326.3423588802203
+On-Merchant Volume,Merchant 1,Very Good (740-799),979.5253037129334
+On-Merchant Volume,Merchant 10,ALL,473.8029465930018
+On-Merchant Volume,Merchant 2,Exceptional (800-850),1464.0538604009787
+On-Merchant Volume,Merchant 2,Fair (580-669),539.1730141458106
+On-Merchant Volume,Merchant 2,Good (670-739),788.8298495228058
+On-Merchant Volume,Merchant 2,Poor (300-579),328.16162518138185
+On-Merchant Volume,Merchant 2,Very Good (740-799),1148.4887479991212
+On-Merchant Volume,Merchant 3,Exceptional (800-850),1076.6060569570714
+On-Merchant Volume,Merchant 3,Fair (580-669),449.0051743921713
+On-Merchant Volume,Merchant 3,Good (670-739),637.5599550974589
+On-Merchant Volume,Merchant 3,Poor (300-579),280.6467020107943
+On-Merchant Volume,Merchant 3,Very Good (740-799),836.1424190529292
+On-Merchant Volume,Merchant 4,Exceptional (800-850),770.9772737148568
+On-Merchant Volume,Merchant 4,Fair (580-669),390.5470691373286
+On-Merchant Volume,Merchant 4,Good (670-739),516.0324800274025
+On-Merchant Volume,Merchant 4,Poor (300-579),249.93756281789663
+On-Merchant Volume,Merchant 4,Very Good (740-799),658.6918488517861
+On-Merchant Volume,Merchant 5,Exceptional (800-850),936.4253873912121
+On-Merchant Volume,Merchant 5,Fair (580-669),420.68588799696005
+On-Merchant Volume,Merchant 5,Good (670-739),565.9203227433183
+On-Merchant Volume,Merchant 5,Poor (300-579),261.42011235386406
+On-Merchant Volume,Merchant 5,Very Good (740-799),749.0026257005134
+On-Merchant Volume,Merchant 6,Exceptional (800-850),1393.3827034929918
+On-Merchant Volume,Merchant 6,Fair (580-669),549.5885863615496
+On-Merchant Volume,Merchant 6,Good (670-739),785.3006134969326
+On-Merchant Volume,Merchant 6,Poor (300-579),336.71752123309216
+On-Merchant Volume,Merchant 6,Very Good (740-799),1087.2877508399165
+On-Merchant Volume,Merchant 7,Exceptional (800-850),1413.692835787842
+On-Merchant Volume,Merchant 7,Fair (580-669),479.27718318597795
+On-Merchant Volume,Merchant 7,Good (670-739),759.1135080475268
+On-Merchant Volume,Merchant 7,Poor (300-579),302.4731684554363
+On-Merchant Volume,Merchant 7,Very Good (740-799),1121.7708926047612
+On-Merchant Volume,Merchant 8,Exceptional (800-850),542.8993597110491
+On-Merchant Volume,Merchant 8,Fair (580-669),261.0043634693409
+On-Merchant Volume,Merchant 8,Good (670-739),348.81635344543355
+On-Merchant Volume,Merchant 8,Poor (300-579),180.67940552016987
+On-Merchant Volume,Merchant 8,Very Good (740-799),454.3454234904049
+On-Merchant Volume,Merchant 9,ALL,301.7739453589989
+Outstanding Balance,Merchant 1,Exceptional (800-850),1605.0457634892837
+Outstanding Balance,Merchant 1,Fair (580-669),1206.5085085085086
+Outstanding Balance,Merchant 1,Good (670-739),1357.8931351211775
+Outstanding Balance,Merchant 1,Poor (300-579),915.7382154330296
+Outstanding Balance,Merchant 1,Very Good (740-799),1459.9697616641722
+Outstanding Balance,Merchant 10,ALL,1086.0313075506447
+Outstanding Balance,Merchant 2,Exceptional (800-850),1819.8580486419987
+Outstanding Balance,Merchant 2,Fair (580-669),1257.925281102648
+Outstanding Balance,Merchant 2,Good (670-739),1448.1380642894783
+Outstanding Balance,Merchant 2,Poor (300-579),943.1471146333296
+Outstanding Balance,Merchant 2,Very Good (740-799),1652.6427293556385
+Outstanding Balance,Merchant 3,Exceptional (800-850),1482.8264796194835
+Outstanding Balance,Merchant 3,Fair (580-669),1145.6394379614194
+Outstanding Balance,Merchant 3,Good (670-739),1278.1763445249514
+Outstanding Balance,Merchant 3,Poor (300-579),878.7424177293786
+Outstanding Balance,Merchant 3,Very Good (740-799),1367.0420964594368
+Outstanding Balance,Merchant 4,Exceptional (800-850),1252.9487680876027
+Outstanding Balance,Merchant 4,Fair (580-669),1068.8820212672024
+Outstanding Balance,Merchant 4,Good (670-739),1146.2611700466448
+Outstanding Balance,Merchant 4,Poor (300-579),834.7360886912558
+Outstanding Balance,Merchant 4,Very Good (740-799),1189.6361807937624
+Outstanding Balance,Merchant 5,Exceptional (800-850),1404.952947003467
+Outstanding Balance,Merchant 5,Fair (580-669),1139.4965088110957
+Outstanding Balance,Merchant 5,Good (670-739),1238.672718103883
+Outstanding Balance,Merchant 5,Poor (300-579),870.7778733741586
+Outstanding Balance,Merchant 5,Very Good (740-799),1314.2167966453737
+Outstanding Balance,Merchant 6,Exceptional (800-850),1688.7127737342275
+Outstanding Balance,Merchant 6,Fair (580-669),1226.2065190521596
+Outstanding Balance,Merchant 6,Good (670-739),1382.5290797546013
+Outstanding Balance,Merchant 6,Poor (300-579),924.5863479081472
+Outstanding Balance,Merchant 6,Very Good (740-799),1543.7762190138926
+Outstanding Balance,Merchant 7,Exceptional (800-850),1860.4247591628834
+Outstanding Balance,Merchant 7,Fair (580-669),1231.9528462850938
+Outstanding Balance,Merchant 7,Good (670-739),1472.5915002387574
+Outstanding Balance,Merchant 7,Poor (300-579),936.8517654378597
+Outstanding Balance,Merchant 7,Very Good (740-799),1708.9416493823535
+Outstanding Balance,Merchant 8,Exceptional (800-850),1143.6266622886226
+Outstanding Balance,Merchant 8,Fair (580-669),989.4067212738269
+Outstanding Balance,Merchant 8,Good (670-739),1049.4935707220573
+Outstanding Balance,Merchant 8,Poor (300-579),796.0934182590233
+Outstanding Balance,Merchant 8,Very Good (740-799),1104.9492615291872
+Outstanding Balance,Merchant 9,ALL,970.8948117179108
+Principal Payments,Merchant 1,Exceptional (800-850),-1187.5625469101826
+Principal Payments,Merchant 1,Fair (580-669),-341.7646217646218
+Principal Payments,Merchant 1,Good (670-739),-533.9896344387473
+Principal Payments,Merchant 1,Poor (300-579),-199.6689175899823
+Principal Payments,Merchant 1,Very Good (740-799),-832.6999490962688
+Principal Payments,Merchant 10,ALL,-497.0687538367096
+Principal Payments,Merchant 2,Exceptional (800-850),-1337.633332882694
+Principal Payments,Merchant 2,Fair (580-669),-352.7263934228026
+Principal Payments,Merchant 2,Good (670-739),-568.2797587680777
+Principal Payments,Merchant 2,Poor (300-579),-203.27603527179372
+Principal Payments,Merchant 2,Very Good (740-799),-945.2486320789262
+Principal Payments,Merchant 3,Exceptional (800-850),-1112.2674453609488
+Principal Payments,Merchant 3,Fair (580-669),-324.80460715754833
+Principal Payments,Merchant 3,Good (670-739),-506.9752015511787
+Principal Payments,Merchant 3,Poor (300-579),-191.91383674834026
+Principal Payments,Merchant 3,Very Good (740-799),-780.0171253335458
+Principal Payments,Merchant 4,Exceptional (800-850),-906.192152261765
+Principal Payments,Merchant 4,Fair (580-669),-298.8092384928794
+Principal Payments,Merchant 4,Good (670-739),-448.7683984646538
+Principal Payments,Merchant 4,Poor (300-579),-178.9388724758627
+Principal Payments,Merchant 4,Very Good (740-799),-686.9377746552603
+Principal Payments,Merchant 5,Exceptional (800-850),-1048.404443501026
+Principal Payments,Merchant 5,Fair (580-669),-312.40440792286137
+Principal Payments,Merchant 5,Good (670-739),-479.011598587998
+Principal Payments,Merchant 5,Poor (300-579),-187.13497646642037
+Principal Payments,Merchant 5,Very Good (740-799),-751.0561586393385
+Principal Payments,Merchant 6,Exceptional (800-850),-1234.2402186695483
+Principal Payments,Merchant 6,Fair (580-669),-344.4326729526433
+Principal Payments,Merchant 6,Good (670-739),-550.6282208588957
+Principal Payments,Merchant 6,Poor (300-579),-200.6527209814407
+Principal Payments,Merchant 6,Very Good (740-799),-864.283119949151
+Principal Payments,Merchant 7,Exceptional (800-850),-1383.1491529177279
+Principal Payments,Merchant 7,Fair (580-669),-351.5640349516571
+Principal Payments,Merchant 7,Good (670-739),-585.7784893682762
+Principal Payments,Merchant 7,Poor (300-579),-207.3572872919583
+Principal Payments,Merchant 7,Very Good (740-799),-973.688074741653
+Principal Payments,Merchant 8,Exceptional (800-850),-852.9141356099162
+Principal Payments,Merchant 8,Fair (580-669),-275.8937456939447
+Principal Payments,Merchant 8,Good (670-739),-417.0392350807781
+Principal Payments,Merchant 8,Poor (300-579),-169.55740650008167
+Principal Payments,Merchant 8,Very Good (740-799),-620.36571887873
+Principal Payments,Merchant 9,ALL,-381.4824492640014
+Revolve Balance,Merchant 1,Exceptional (800-850),228.70903177383036
+Revolve Balance,Merchant 1,Fair (580-669),428.69297869297867
+Revolve Balance,Merchant 1,Good (670-739),347.14209303183446
+Revolve Balance,Merchant 1,Poor (300-579),405.73329836753425
+Revolve Balance,Merchant 1,Very Good (740-799),289.3360481989956
+Revolve Balance,Merchant 10,ALL,374.02163904235726
+Revolve Balance,Merchant 2,Exceptional (800-850),191.0962700590788
+Revolve Balance,Merchant 2,Fair (580-669),401.5354854310241
+Revolve Balance,Merchant 2,Good (670-739),317.52444522513025
+Revolve Balance,Merchant 2,Poor (300-579),384.76392454515013
+Revolve Balance,Merchant 2,Very Good (740-799),257.52068882541874
+Revolve Balance,Merchant 3,Exceptional (800-850),254.3199470166777
+Revolve Balance,Merchant 3,Fair (580-669),467.57886076771524
+Revolve Balance,Merchant 3,Good (670-739),376.6404735177059
+Revolve Balance,Merchant 3,Poor (300-579),431.1935807422267
+Revolve Balance,Merchant 3,Very Good (740-799),312.2784658887252
+Revolve Balance,Merchant 4,Exceptional (800-850),282.0927301959762
+Revolve Balance,Merchant 4,Fair (580-669),484.66137719641256
+Revolve Balance,Merchant 4,Good (670-739),397.289972899729
+Revolve Balance,Merchant 4,Poor (300-579),449.24923095665946
+Revolve Balance,Merchant 4,Very Good (740-799),333.72043366257526
+Revolve Balance,Merchant 5,Exceptional (800-850),278.12212552182837
+Revolve Balance,Merchant 5,Fair (580-669),522.7616016719708
+Revolve Balance,Merchant 5,Good (670-739),433.0307614725164
+Revolve Balance,Merchant 5,Poor (300-579),474.4319044486057
+Revolve Balance,Merchant 5,Very Good (740-799),360.2970568640514
+Revolve Balance,Merchant 6,Exceptional (800-850),307.6693258748371
+Revolve Balance,Merchant 6,Fair (580-669),488.1519935021365
+Revolve Balance,Merchant 6,Good (670-739),413.6368098159509
+Revolve Balance,Merchant 6,Poor (300-579),440.42938030827304
+Revolve Balance,Merchant 6,Very Good (740-799),354.01570870789067
+Revolve Balance,Merchant 7,Exceptional (800-850),178.34348355663823
+Revolve Balance,Merchant 7,Fair (580-669),375.49764748461814
+Revolve Balance,Merchant 7,Good (670-739),296.05629055363613
+Revolve Balance,Merchant 7,Poor (300-579),361.2848032353399
+Revolve Balance,Merchant 7,Very Good (740-799),233.12898074558103
+Revolve Balance,Merchant 8,Exceptional (800-850),255.67230339845673
+Revolve Balance,Merchant 8,Fair (580-669),448.0364387966011
+Revolve Balance,Merchant 8,Good (670-739),375.19287833827894
+Revolve Balance,Merchant 8,Poor (300-579),420.4148293320268
+Revolve Balance,Merchant 8,Very Good (740-799),313.96563850095447
+Revolve Balance,Merchant 9,ALL,464.74174723456144
+Total Accounts,Merchant 1,Exceptional (800-850),1.0
+Total Accounts,Merchant 1,Fair (580-669),1.0
+Total Accounts,Merchant 1,Good (670-739),1.0
+Total Accounts,Merchant 1,Poor (300-579),1.0
+Total Accounts,Merchant 1,Very Good (740-799),1.0
+Total Accounts,Merchant 10,ALL,1.0
+Total Accounts,Merchant 2,Exceptional (800-850),1.0
+Total Accounts,Merchant 2,Fair (580-669),1.0
+Total Accounts,Merchant 2,Good (670-739),1.0
+Total Accounts,Merchant 2,Poor (300-579),1.0
+Total Accounts,Merchant 2,Very Good (740-799),1.0
+Total Accounts,Merchant 3,Exceptional (800-850),1.0
+Total Accounts,Merchant 3,Fair (580-669),1.0
+Total Accounts,Merchant 3,Good (670-739),1.0
+Total Accounts,Merchant 3,Poor (300-579),1.0
+Total Accounts,Merchant 3,Very Good (740-799),1.0
+Total Accounts,Merchant 4,Exceptional (800-850),1.0
+Total Accounts,Merchant 4,Fair (580-669),1.0
+Total Accounts,Merchant 4,Good (670-739),1.0
+Total Accounts,Merchant 4,Poor (300-579),1.0
+Total Accounts,Merchant 4,Very Good (740-799),1.0
+Total Accounts,Merchant 5,Exceptional (800-850),1.0
+Total Accounts,Merchant 5,Fair (580-669),1.0
+Total Accounts,Merchant 5,Good (670-739),1.0
+Total Accounts,Merchant 5,Poor (300-579),1.0
+Total Accounts,Merchant 5,Very Good (740-799),1.0
+Total Accounts,Merchant 6,Exceptional (800-850),1.0
+Total Accounts,Merchant 6,Fair (580-669),1.0
+Total Accounts,Merchant 6,Good (670-739),1.0
+Total Accounts,Merchant 6,Poor (300-579),1.0
+Total Accounts,Merchant 6,Very Good (740-799),1.0
+Total Accounts,Merchant 7,Exceptional (800-850),1.0
+Total Accounts,Merchant 7,Fair (580-669),1.0
+Total Accounts,Merchant 7,Good (670-739),1.0
+Total Accounts,Merchant 7,Poor (300-579),1.0
+Total Accounts,Merchant 7,Very Good (740-799),1.0
+Total Accounts,Merchant 8,Exceptional (800-850),1.0
+Total Accounts,Merchant 8,Fair (580-669),1.0
+Total Accounts,Merchant 8,Good (670-739),1.0
+Total Accounts,Merchant 8,Poor (300-579),1.0
+Total Accounts,Merchant 8,Very Good (740-799),1.0
+Total Accounts,Merchant 9,ALL,1.0
