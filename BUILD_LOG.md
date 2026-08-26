@@ -507,3 +507,74 @@ rerun (both compute live/at-build-time from the regenerated CSVs/JSON);
 `pitch_deck.html`'s hardcoded LTV/CAC stat tiles were updated by hand to
 match, since that file (a known, separately-flagged issue) doesn't read from
 `output/` at build time.
+
+---
+
+## Day 2 — Exceptional-FICO magnitude validation (2026-08-26)
+
+Direction of the Exceptional-FICO finding (Risk #2 above) was never in
+question; only whether the *size* of the effect — Merchant 1's most mature
+cohort paying $91,497 in rewards on $274,600 revenue, 33% — held up beyond
+the one traced example, or was cherry-picked by which cohort got looked at.
+New diagnostic script: `scripts/13_validate_exceptional_fico.py`
+(deliberately independent of `pnl_utils.py`/`06_pnl_rollup.py`, same
+discipline as `08_audit.py`). **No bug found — the finding is confirmed and,
+if anything, understated.** No pipeline code changed.
+
+**1. Hand-derivation, 3 more merchants.** Each merchant's own most mature
+observed cohort (not a fixed QSB — Merchant 1 is the only one old enough to
+reach QSB 13; Merchants 4/5/7 launched 5/6/8 quarters later, so their own
+ceilings are QSB 8/7/5):
+
+| Merchant | Cohort | Exceptional rewards/revenue | Poor rewards/revenue | Exceptional CP | Poor CP |
+|---|---|---|---|---|---|
+| Merchant 1 | Vintage 0, QSB 13 | 33.3% | 2.9% | -$28.7K | +$34.0K |
+| Merchant 4 | Vintage 5, QSB 8 | 37.0% | 3.6% | -$17.9K | +$69.8K |
+| Merchant 5 | Vintage 6, QSB 7 | 33.0% | 3.1% | -$5.2K | +$51.1K |
+| Merchant 7 | Vintage 8, QSB 5 | 41.6% | 5.0% | -$79.9K | +$9.9K |
+
+Exceptional-tier customers pay **8.3x–11.6x** Poor-tier's rewards burden as a
+share of revenue at every merchant checked, and Contribution Profit is
+negative for Exceptional / solidly positive for Poor in all four — the
+pattern isn't specific to Merchant 1. Full table:
+`output/exceptional_fico_hand_derivation.csv`.
+
+**2. Systematic outlier scan.** Within-FICO-tier z-scores (|z|>2.5) on
+independently-recomputed 12Q undiscounted CP/Account found no outliers
+driving the Poor/Fair tiers, a handful in Good/Very Good/Exceptional — all
+traced to **Merchant 7** (already flagged as the portfolio's one clear
+structural drag) and **Merchant 10** (thinnest history, 2 vintages), not to
+any broad pattern across merchants. The Rewards *rate curve itself* has zero
+single-QSB outliers at any merchant/FICO combination — the elevated
+Exceptional rate is a stable level shift across the whole curve, not one
+anomalous quarter skewing an average.
+
+**3. Rewards-rate assumption sanity check.**
+- **Classification confirmed correct**: `Rewards` is `Family=Expense,
+  Category=Rewards, Model Role=Rate-Derived`, routing to Cost of Sales via
+  `pnl_utils.py` exactly as the case brief specifies ("Rewards ... Cost of
+  Sales per brief" in `line_item_classification.csv`) — not a
+  Partner-Signing-Bonus-style Category/Model-Role mismatch.
+- **New finding worth stating explicitly**: Merchants 9 and 10 (pooled to
+  Merchant-level curves for thin history, per `04_curve_library.py`'s
+  `POOL_THRESHOLD`) apply a single blended Rewards rate across **all** FICO
+  tiers (`Grain FICO = "ALL"`), not an Exceptional-specific one. For these
+  two merchants, the rewards-heavy-Exceptional mechanism isn't actually
+  modeled — whatever FICO-tier spread shows up in their forecast LTV/CAC
+  comes only from differing volume drivers (NTV, Active Accounts) by tier,
+  not from a differentiated rate. **The portfolio-wide Exceptional-FICO
+  finding is driven entirely by the 8 FICO-specific merchants; Merchants 9
+  and 10 dilute it rather than reinforce it** — worth saying this precisely
+  if asked whether the finding holds "across the whole portfolio," since it
+  technically doesn't apply as a rate effect for 2 of the 10 merchants.
+- **The "held flat" rate is a stable plateau, not a noisy single point**:
+  trailing-4-quarter range on the Exceptional-tier Rewards rate spans only
+  1.0%–4.7% of its own mean across every FICO-specific merchant — the flat
+  extrapolation is well-supported by recent history, not resting on one
+  volatile observation.
+
+**Bottom line for the debrief**: safe to keep leaning on this finding as
+stated, with one added nuance — call it an 8-merchant pattern (all
+FICO-specific merchants show it, magnitude consistently 8x-12x), not a
+literal 10-merchant one, since Merchants 9/10's rate curves don't
+differentiate by FICO tier at all.
