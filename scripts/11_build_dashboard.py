@@ -104,6 +104,18 @@ HTML_TEMPLATE = r"""<!doctype html>
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
   @media (max-width: 820px) { .two-col { grid-template-columns: 1fr; } }
 
+  /* Driver KPI tab (item 7) -- 6 small-multiple trend lines, one metric
+     each, rather than one combined chart: the 6 metrics have unrelated
+     scales/units (a rate vs. a $/account figure) and most have stock-based
+     denominators that are only ever safe to read per-quarter, not blended
+     across a range -- a trend line sidesteps that by construction. */
+  .kpi-chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  @media (max-width: 900px) { .kpi-chart-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .kpi-chart-grid { grid-template-columns: 1fr; } }
+  .kpi-chart-cell { border: 1px solid var(--grid); border-radius: 8px; padding: 0.7rem 0.8rem 0.5rem; }
+  .kpi-chart-cell h3 { font-size: 0.82rem; margin: 0 0 0.35rem; font-weight: 600; }
+  .kpi-chart-cell .kpi-chart-latest { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+
   svg.chart-svg { width: 100%; height: auto; overflow: visible; }
   svg text { font-family: inherit; fill: var(--ink-2); }
   .axis-line { stroke: var(--grid); stroke-width: 1; }
@@ -216,6 +228,19 @@ HTML_TEMPLATE = r"""<!doctype html>
     <div id="fico-chart"></div>
   </section>
 </div>
+
+<section class="panel">
+  <h2>Portfolio driver KPIs</h2>
+  <p class="panel-note">Payment Rate, PPAA (spend per active account), Active Rate, Revolve Rate, NIM, and Revenue Margin &mdash; shown as trend lines only, not blended into a single figure for the filtered range. Most of these ratios have a balance/snapshot denominator that's only meaningful at a single point in time (e.g. Outstanding Balance at quarter-end), so unlike Gross Revenue or Contribution Profit there's no honest way to collapse them across a multi-quarter filter into one number &mdash; each point on these lines is that quarter's own correctly-derived value. Reflects the filters above.</p>
+  <div class="kpi-chart-grid" id="driver-kpi-grid">
+    <div class="kpi-chart-cell"><h3>Payment Rate</h3><div id="kpi-chart-paymentRate"></div><p class="kpi-chart-latest" id="kpi-latest-paymentRate"></p></div>
+    <div class="kpi-chart-cell"><h3>PPAA (NTV / Active Account)</h3><div id="kpi-chart-ppaa"></div><p class="kpi-chart-latest" id="kpi-latest-ppaa"></p></div>
+    <div class="kpi-chart-cell"><h3>Active Rate</h3><div id="kpi-chart-activeRate"></div><p class="kpi-chart-latest" id="kpi-latest-activeRate"></p></div>
+    <div class="kpi-chart-cell"><h3>Revolve Rate</h3><div id="kpi-chart-revolveRate"></div><p class="kpi-chart-latest" id="kpi-latest-revolveRate"></p></div>
+    <div class="kpi-chart-cell"><h3>NIM</h3><div id="kpi-chart-nim"></div><p class="kpi-chart-latest" id="kpi-latest-nim"></p></div>
+    <div class="kpi-chart-cell"><h3>Revenue Margin (Gross Revenue / NTV)</h3><div id="kpi-chart-revenueMargin"></div><p class="kpi-chart-latest" id="kpi-latest-revenueMargin"></p></div>
+  </div>
+</section>
 
 <section class="panel">
   <h2>Quarterly P&amp;L detail</h2>
@@ -600,6 +625,112 @@ function renderDetailTable(f) {
   body.innerHTML = html;
 }
 
+// ---- Driver KPIs (item 7) ----
+//
+// PPAA = NTV / Active Accounts (spend per active account -- settled
+// definition, do not re-derive). Other 5 formulas: default conventions
+// documented in BUILD_LOG.md "Day 2 -- Driver KPI dashboard tab", informed
+// by the finance-skills plugin's general "flow-over-stock ratios use an
+// average balance" pattern (its Inventory Turnover formula) plus standard
+// card-portfolio/ABS reporting convention for Payment Rate specifically
+// (the finance-skills plugin doesn't cover card-portfolio metrics directly).
+//
+// Same sum-then-divide invariant as derivePnl()/renderDetailTable: every
+// KPI is computed from THIS quarter's summed dollar/count components,
+// never averaged from other cohorts' pre-computed ratios.
+function deriveDriverKpis(detailRows) {
+  let ntv = 0, aa = 0, ta = 0, os = 0, rb = 0, bos = 0, brb = 0, pp = 0, ir = 0, cof = 0;
+  let grRevenueItems = 0; // ir + ic + mdr + fr + orv, i.e. the same 5 lines that sum to Gross Revenue
+  for (const r of detailRows) {
+    ntv += r.ntv || 0; aa += r.aa || 0; ta += r.ta || 0; os += r.os || 0; rb += r.rb || 0;
+    bos += r.bos || 0; brb += r.brb || 0; pp += r.pp || 0; ir += r.ir || 0; cof += r.cof || 0;
+    grRevenueItems += (r.ir||0) + (r.ic||0) + (r.mdr||0) + (r.fr||0) + (r.orv||0);
+  }
+  const avgRb = brb ? (rb + brb) / 2 : rb; // no prior-quarter balance (portfolio's first quarter) -- fall back to ending
+  return {
+    paymentRate: bos !== 0 ? -pp / bos : NaN,       // pp is stored negative (an outflow); bos = Beginning Outstanding Balance
+    ppaa: aa !== 0 ? ntv / aa : NaN,
+    activeRate: ta !== 0 ? aa / ta : NaN,
+    revolveRate: os !== 0 ? rb / os : NaN,
+    nim: avgRb !== 0 ? (ir + cof) / avgRb : NaN,     // cof stored negative -- ir + cof = net interest income
+    revenueMargin: ntv !== 0 ? grRevenueItems / ntv : NaN,
+  };
+}
+
+const KPI_SPECS = [
+  { key: "paymentRate", fmt: fmtPct },
+  { key: "ppaa", fmt: fmtMoney },
+  { key: "activeRate", fmt: fmtPct },
+  { key: "revolveRate", fmt: fmtPct },
+  { key: "nim", fmt: fmtPct },
+  { key: "revenueMargin", fmt: fmtPct },
+];
+
+// Single-series small-multiple line chart -- a simplified version of
+// renderTrendChart for one metric at a time (no multi-series end-label
+// collision handling needed since there's only one line).
+function renderSmallLineChart(containerId, series, fmt, color) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+  const finite = series.filter(s => isFinite(s.value));
+  if (finite.length === 0) {
+    container.innerHTML = '<p class="panel-note">No data for this filter combination.</p>';
+    return;
+  }
+
+  const W = 320, H = 130, ML = 8, MR = 8, MT = 10, MB = 20;
+  const plotW = W - ML - MR, plotH = H - MT - MB;
+  const vals = finite.map(s => s.value);
+  const yMax = Math.max(...vals) * 1.15 || 1;
+  const yMin = Math.min(0, Math.min(...vals) * 1.15);
+  const x = i => ML + (series.length === 1 ? plotW / 2 : (i / (series.length - 1)) * plotW);
+  const y = v => MT + plotH - ((v - yMin) / (yMax - yMin || 1)) * plotH;
+
+  const svg = svgEl("svg", { class: "chart-svg", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": containerId });
+
+  const seamIdx = series.findIndex(s => s.idx >= FORECAST_START);
+  if (seamIdx > 0) {
+    svg.appendChild(svgEl("rect", { class: "seam-band", x: x(seamIdx), y: MT, width: (W - MR) - x(seamIdx), height: plotH }));
+  }
+  svg.appendChild(svgEl("line", { class: "axis-line", x1: ML, x2: W - MR, y1: y(0) , y2: y(0) }));
+
+  const pts = series.filter(s => isFinite(s.value)).map(s => `${x(series.indexOf(s))},${y(s.value)}`).join(" ");
+  svg.appendChild(svgEl("polyline", { class: "series-line", points: pts, stroke: color, "stroke-width": 1.75 }));
+  series.forEach((s, i) => {
+    if (!isFinite(s.value)) return;
+    svg.appendChild(svgEl("circle", { r: 2, cx: x(i), cy: y(s.value), fill: color }));
+  });
+
+  const first = series[0], last = series[series.length - 1];
+  svg.appendChild(Object.assign(svgEl("text", { x: ML, y: H - 4, "font-size": "9", "text-anchor": "start" }), { textContent: first.label }));
+  svg.appendChild(Object.assign(svgEl("text", { x: W - MR, y: H - 4, "font-size": "9", "text-anchor": "end" }), { textContent: last.label }));
+
+  container.appendChild(svg);
+}
+
+function renderDriverKpiCharts(f) {
+  const PALETTE = currentPalette();
+  const rows = DATA.detail.filter(r => matchesFilter(r, f));
+  const byDate = groupBy(rows, r => r.r);
+  const dateIdxs = [...byDate.keys()].sort((a, b) => a - b);
+
+  const seriesByKpi = {};
+  for (const spec of KPI_SPECS) seriesByKpi[spec.key] = [];
+  dateIdxs.forEach(idx => {
+    const kpis = deriveDriverKpis(byDate.get(idx));
+    const label = DATA.dims.reportDates.find(d => d.idx === idx).label;
+    for (const spec of KPI_SPECS) seriesByKpi[spec.key].push({ idx, label, value: kpis[spec.key] });
+  });
+
+  for (const spec of KPI_SPECS) {
+    const series = seriesByKpi[spec.key];
+    renderSmallLineChart(`kpi-chart-${spec.key}`, series, spec.fmt, PALETTE.blue);
+    const lastFinite = [...series].reverse().find(s => isFinite(s.value));
+    document.getElementById(`kpi-latest-${spec.key}`).textContent = lastFinite
+      ? `Latest (${lastFinite.label}): ${spec.fmt(lastFinite.value)}` : "";
+  }
+}
+
 function renderFilterSummary(f) {
   const parts = [];
   parts.push(f.merchant === "all" ? "All merchants" : f.merchant);
@@ -616,6 +747,7 @@ function renderAll() {
   renderTrendChart(f);
   renderComparisonChart("merchant-chart", "m", DATA.dims.merchants.map(m => ({value: m, label: m})), f, { skipMerchant: true });
   renderComparisonChart("fico-chart", "f", DATA.dims.ficoBuckets.map(v => ({value: v, label: v})), f, { skipFico: true });
+  renderDriverKpiCharts(f);
   renderTable(f);
   const detailToggle = document.getElementById("detail-toggle");
   if (detailToggle.open) renderDetailTable(f);

@@ -45,6 +45,7 @@ Checks:
      only flags a disagreement in the immediate next quarter or a sign
      flip -- not the growing gap further out, which is not a red flag.
 """
+import json
 import re
 import pandas as pd
 import numpy as np
@@ -494,6 +495,69 @@ def check_g_seasonal_index():
     )
 
 
+def check_h_driver_kpi_sanity():
+    """Day 2 item 7: independently recomputes PPAA and Payment Rate for one
+    sample quarter, straight from combined_actuals_forecast.parquet (NOT
+    from dashboard_data.json, which is itself 10_export_dashboard_data.py's
+    output -- reading that would just check the export script against
+    itself), then confirms it matches what actually shipped in
+    dashboard_data.json's `detail` array for the same quarter. Sample:
+    Report Date Index 14 (Q3 2026, first forecast quarter), all
+    merchants/vintages/FICO tiers pooled -- matches the dashboard's default
+    "All" filter view, the one most people will actually look at."""
+    SAMPLE_REPORT_IDX = 14
+
+    df = pd.read_parquet(OUT_DIR / "combined_actuals_forecast.parquet")
+    sample = df[df["Report Date Index"] == SAMPLE_REPORT_IDX]
+
+    def total(line_item):
+        return sample[sample["Line Item"] == line_item]["Value"].sum()
+
+    ntv, aa = total("Net Transaction Volume"), total("In-Month Active Accounts")
+    ppaa_recomputed = ntv / aa if aa else float("nan")
+
+    # Beginning Outstanding Balance: this quarter's portfolio-wide balance
+    # among cohorts that also had an Outstanding Balance the PRIOR quarter
+    # (continuing cohorts only -- a brand-new QSB=0 cohort has no beginning
+    # balance, same convention as Check B's roll-forward identity above).
+    prev = df[df["Report Date Index"] == SAMPLE_REPORT_IDX - 1]
+    prev_os = prev[prev["Line Item"] == "Outstanding Balance"].groupby(
+        ["Merchant", "Vintage Index", "FICO Bucket"]
+    )["Value"].sum()
+    cur_os_by_cohort = sample[sample["Line Item"] == "Outstanding Balance"].groupby(
+        ["Merchant", "Vintage Index", "FICO Bucket"]
+    )["Value"].sum()
+    continuing = cur_os_by_cohort.index.intersection(prev_os.index)
+    beginning_os = prev_os.loc[continuing].sum()
+    pp = total("Principal Payments")
+    payment_rate_recomputed = -pp / beginning_os if beginning_os else float("nan")
+
+    detail = json.loads((OUT_DIR / "dashboard_data.json").read_text())["detail"]
+    shipped_rows = [r for r in detail if r["r"] == SAMPLE_REPORT_IDX]
+    ntv_s = sum(r.get("ntv", 0) for r in shipped_rows)
+    aa_s = sum(r.get("aa", 0) for r in shipped_rows)
+    bos_s = sum(r.get("bos", 0) for r in shipped_rows)
+    pp_s = sum(r.get("pp", 0) for r in shipped_rows)
+    ppaa_shipped = ntv_s / aa_s if aa_s else float("nan")
+    payment_rate_shipped = -pp_s / bos_s if bos_s else float("nan")
+
+    ppaa_diff = abs(ppaa_recomputed - ppaa_shipped) / ppaa_shipped if ppaa_shipped else float("nan")
+    # Payment rate: the independent recompute uses only continuing cohorts
+    # (a cleaner, explicit "which cohorts have a beginning balance" test);
+    # the shipped bos field is 0 for any cohort without a prior quarter,
+    # which sums to the same continuing-cohort-only total -- so these two
+    # SHOULD match exactly, not just approximately.
+    pr_diff = abs(payment_rate_recomputed - payment_rate_shipped) / payment_rate_shipped if payment_rate_shipped else float("nan")
+
+    status = PASS if (ppaa_diff < 0.001 and pr_diff < 0.001) else FAIL
+    record(
+        "H. Driver KPI sanity (PPAA, Payment Rate independently recomputed vs. shipped, Q3 2026 sample)",
+        status,
+        f"PPAA: recomputed ${ppaa_recomputed:,.2f} vs. shipped ${ppaa_shipped:,.2f} ({ppaa_diff:.3%} diff); "
+        f"Payment Rate: recomputed {payment_rate_recomputed:.4%} vs. shipped {payment_rate_shipped:.4%} ({pr_diff:.3%} diff)",
+    )
+
+
 def main():
     print("=" * 70)
     print("INDEPENDENT AUDIT -- recomputed via separate code paths from source")
@@ -505,6 +569,7 @@ def main():
     check_e_ltv_sanity()
     check_f_independent_trend()
     check_g_seasonal_index()
+    check_h_driver_kpi_sanity()
 
     print("\n" + "=" * 70)
     n_fail = sum(1 for _, status, _ in results if status == FAIL)

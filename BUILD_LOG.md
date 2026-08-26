@@ -777,3 +777,93 @@ period's seasonal saw-tooth (Day 2's seasonality change, above) is visible
 in Net Transaction Volume's columns, filtered to Merchant 7 and confirmed
 every column dropped to that merchant's own (much smaller) scale with no
 console errors.
+
+---
+
+## Day 2 — Driver KPI dashboard tab (2026-08-26)
+
+TODO item 7: a new dashboard section for portfolio driver KPIs beyond the
+P&L-centric views already shipped — Payment Rate, PPAA, Active Rate, Revolve
+Rate, NIM, Revenue Margin. **PPAA = Net Transaction Volume ÷ In-Month Active
+Accounts** (spend per active account) was already settled before this item
+started — not revisited.
+
+**Loaded `finance-skills:financial-analyst` first**, per the TODO's own
+instruction. It doesn't cover card-portfolio metrics directly (Payment Rate,
+PPAA, Revolve Rate aren't standard corporate ratios), but its own worked
+formulas are informative on one specific point: Inventory Turnover is
+defined as `COGS / Average Inventory` (average, not period-end) while
+Asset/Receivables Turnover use plain period-end balances — i.e. this skill's
+own convention is "average the balance specifically when a flow is being
+compared against a balance that moves materially within the period," which
+supports averaging for NIM below. Payment Rate and PPAA aren't covered by
+this generalist skill at all; those conventions come from standard
+card-portfolio/ABS trust-reporting practice instead — flagged explicitly
+since the instruction was to confirm via finance-skills and this genuinely
+falls outside its scope.
+
+**Formulas shipped** (all sum-then-divide from this quarter's own summed
+components — same invariant as `derivePnl()`/the detail table, never an
+average of other quarters' or cohorts' pre-computed ratios):
+- **Payment Rate** = Principal Payments ÷ **Beginning** Outstanding Balance.
+  Beginning (not average) balance is the standard card-ABS/trust-reporting
+  convention for "monthly/quarterly payment rate" specifically — this is a
+  deliberate departure from the generic average-balance pattern above,
+  because Payment Rate has its own well-established domain convention that
+  overrides the generalist default.
+- **Active Rate** = In-Month Active Accounts ÷ Total Accounts (both
+  point-in-time snapshots, no averaging needed).
+- **Revolve Rate** = Revolve Balance ÷ Outstanding Balance (same quarter,
+  stock ÷ stock).
+- **NIM** = (Interest Revenue − Cost of Funds) ÷ **average** Revolve Balance
+  — Revolve Balance (not total Outstanding Balance) is the earning-asset
+  base, since only revolving balance actually accrues net interest margin
+  (transactor/non-revolving balance drives interchange, not NIM); averaged
+  per the finance-skills pattern above and standard bank NIM convention
+  (`NII / average earning assets`).
+- **Revenue Margin** = (Interest + Interchange + MDR + Fee + Other Revenue)
+  ÷ Net Transaction Volume — i.e. the same 5 line items that already sum to
+  the shipped "Gross Revenue" bucket, divided by spend volume ("revenue
+  yield on spend," the natural card-issuer program-economics framing, vs.
+  ÷ Outstanding Balance which would overlap with what NIM already covers).
+
+**New precomputed fields** (`scripts/10_export_dashboard_data.py`): `bos`
+(Beginning Outstanding Balance) and `brb` (Beginning Revolve Balance), both
+a `groupby(cohort).shift(1)` lag on Report Date Index — done in Python, not
+client-side JS, for the same "temporal joins over a flat array are
+error-prone in JS" reason as everything else in this export. A cohort's very
+first quarter has no prior value (NaN → 0 via the existing `safe_round`
+guard) — this correctly and consistently excludes that quarter's brand-new
+originations from the "beginning balance" base, the same treatment
+`08_audit.py` Check B already gives new-cohort originations in its
+roll-forward identity, not a new inconsistency.
+
+**Display: trend-lines only** (confirmed with the user before building) —
+6 small-multiple line charts, not blended KPI tiles. Most of these ratios
+have a stock/snapshot denominator that can't be honestly collapsed across an
+arbitrary multi-quarter filter range the way Gross Revenue/Contribution
+Profit can; a trend line sidesteps that since every point is just that
+quarter's own value. Also sets up the mark-type rule ("lines for rate
+metrics") for item 6, next.
+
+**A genuinely useful side effect, not designed for but worth noting**: with
+the Exceptional FICO tier filter applied, NIM comes out to ~0.1% (vs. ~3.1%
+portfolio-wide) — a clean, independent cross-confirmation of the
+Exceptional-FICO validation earlier in this log (low-revolve customers
+generate almost no net interest margin, consistent with the "rewards-heavy,
+low-revolve" mechanism already described there).
+
+**New audit check**: `08_audit.py` Check H independently recomputes PPAA and
+Payment Rate for Q3 2026 (all merchants pooled) straight from
+`combined_actuals_forecast.parquet` — not from `dashboard_data.json`, which
+would just check the export script against itself — and confirms an exact
+match against what shipped. **PASS**, 0.000% diff on both. Audit now 7/8
+(Check B's explained FAIL unchanged).
+
+**Verified**: hand-derived both KPIs in Python against the raw parquet
+before wiring into JS (matched to machine precision, then codified as Check
+H above); visual QA via claude-in-chrome — all 6 charts render with sane
+values, switching the FICO filter to Exceptional reproduces the NIM
+cross-check above, switching back to "All merchants" and re-checking KPI
+tiles/LTV-CAC still reproduces the already-known headline numbers exactly
+(no regression), no console errors.

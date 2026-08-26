@@ -92,6 +92,7 @@ SHORT_KEYS = {
     "Acquisition Bounties": "ab", "Partner Signing Bonus": "psb",
 }
 BEGINNING_OS_KEY = "bos"  # not a raw line item -- see docstring
+BEGINNING_RB_KEY = "brb"  # Beginning Revolve Balance -- same idea, for item 7's NIM (average earning-asset base)
 
 
 def detail_group(row):
@@ -180,13 +181,15 @@ def build_detail(df, classification):
     wide = wide.reset_index()
     wide = wide.rename(columns=SHORT_KEYS)
 
-    # Beginning Outstanding Balance: shift within each cohort, sorted by
-    # Report Date Index -- spans the actual/forecast seam correctly since
-    # the groupby key is the cohort (Merchant, Vintage Index, FICO Bucket),
-    # not Scenario, so a cohort's last actual quarter correctly seeds its
-    # first forecast quarter's beginning balance.
+    # Beginning Outstanding Balance / Beginning Revolve Balance: shift within
+    # each cohort, sorted by Report Date Index -- spans the actual/forecast
+    # seam correctly since the groupby key is the cohort (Merchant, Vintage
+    # Index, FICO Bucket), not Scenario, so a cohort's last actual quarter
+    # correctly seeds its first forecast quarter's beginning balance.
     wide = wide.sort_values(["Merchant", "Vintage Index", "FICO Bucket", "Report Date Index"])
-    wide[BEGINNING_OS_KEY] = wide.groupby(["Merchant", "Vintage Index", "FICO Bucket"])["os"].shift(1)
+    grp = wide.groupby(["Merchant", "Vintage Index", "FICO Bucket"])
+    wide[BEGINNING_OS_KEY] = grp["os"].shift(1)
+    wide[BEGINNING_RB_KEY] = grp["rb"].shift(1)
 
     return wide
 
@@ -213,6 +216,7 @@ def build_line_item_legend(classification):
         for _, row in cls.iterrows()
     }
     legend[BEGINNING_OS_KEY] = {"label": "Beginning Outstanding Balance", "aggregation": "Stock", "unit": "$"}
+    legend[BEGINNING_RB_KEY] = {"label": "Beginning Revolve Balance", "aggregation": "Stock", "unit": "$"}
     return legend, groups
 
 
@@ -269,7 +273,7 @@ def main():
             "na": round(float(row["New Accounts"]), 2),
         })
 
-    detail_key_cols = [c for c in detail_wide.columns if c in SHORT_KEYS.values() or c == BEGINNING_OS_KEY]
+    detail_key_cols = [c for c in detail_wide.columns if c in SHORT_KEYS.values() or c in (BEGINNING_OS_KEY, BEGINNING_RB_KEY)]
     detail_records = []
     for _, row in detail_wide.iterrows():
         rec = {
