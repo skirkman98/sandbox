@@ -685,11 +685,21 @@ function renderSmallLineChart(containerId, series, fmt, color) {
     return;
   }
 
-  const W = 320, H = 130, ML = 8, MR = 8, MT = 10, MB = 20;
+  const W = 320, H = 130, ML = 8, MR = 8, MT = 16, MB = 20;
   const plotW = W - ML - MR, plotH = H - MT - MB;
   const vals = finite.map(s => s.value);
-  const yMax = Math.max(...vals) * 1.15 || 1;
-  const yMin = Math.min(0, Math.min(...vals) * 1.15);
+  // These are all rate/ratio metrics that typically live in a narrow band
+  // well away from zero (e.g. Active Rate 57%-71%) -- unlike the $ charts
+  // elsewhere on this page, forcing the axis to include 0 would compress
+  // the real, meaningful variation into a sliver at the top of the chart
+  // and make genuine quarter-to-quarter seasonality invisible. Auto-scaled
+  // to the actual data range instead, with the max/min labeled explicitly
+  // (see the text labels below) so a narrower-than-zero axis doesn't read
+  // as more dramatic than the real numbers -- a legitimate, standard
+  // line-chart practice as long as the scale is disclosed, not hidden.
+  const dataMax = Math.max(...vals), dataMin = Math.min(...vals);
+  const pad = (dataMax - dataMin) * 0.18 || Math.abs(dataMax) * 0.1 || 1;
+  const yMax = dataMax + pad, yMin = dataMin - pad;
   const x = i => ML + (series.length === 1 ? plotW / 2 : (i / (series.length - 1)) * plotW);
   const y = v => MT + plotH - ((v - yMin) / (yMax - yMin || 1)) * plotH;
 
@@ -699,7 +709,10 @@ function renderSmallLineChart(containerId, series, fmt, color) {
   if (seamIdx > 0) {
     svg.appendChild(svgEl("rect", { class: "seam-band", x: x(seamIdx), y: MT, width: (W - MR) - x(seamIdx), height: plotH }));
   }
-  svg.appendChild(svgEl("line", { class: "axis-line", x1: ML, x2: W - MR, y1: y(0) , y2: y(0) }));
+  svg.appendChild(svgEl("line", { class: "axis-line", x1: ML, x2: W - MR, y1: MT + plotH, y2: MT + plotH }));
+  // Explicit max/min labels -- the disclosure that makes a non-zero axis honest.
+  svg.appendChild(Object.assign(svgEl("text", { x: ML, y: MT - 4, "font-size": "9" }), { textContent: fmt(dataMax) }));
+  svg.appendChild(Object.assign(svgEl("text", { x: ML, y: MT + plotH - 2, "font-size": "9" }), { textContent: fmt(dataMin) }));
 
   const pts = series.filter(s => isFinite(s.value)).map(s => `${x(series.indexOf(s))},${y(s.value)}`).join(" ");
   svg.appendChild(svgEl("polyline", { class: "series-line", points: pts, stroke: color, "stroke-width": 1.75 }));
@@ -805,8 +818,22 @@ function renderCompareChartSvg(seriesList, blended, metric) {
   const W = 1080, H = 320, ML = 62, MR = 16, MT = 16, MB = 40;
   const plotW = W - ML - MR, plotH = H - MT - MB;
   const allVals = allSeries.flatMap(ser => ser.points.map(p => p.value)).filter(isFinite);
-  const yMax = Math.max(0, ...allVals) * 1.15 || 1;
-  const yMin = Math.min(0, ...allVals) * 1.15;
+  // Bar (additive $) metrics anchor to zero -- meaningful magnitude context,
+  // and some (Contribution Profit) genuinely cross zero. Line (rate/yield)
+  // metrics auto-scale to the actual data range instead: these typically
+  // live in a narrow band away from zero (e.g. Revolve Rate 20%-60%), and
+  // forcing a zero baseline would crush real quarter-to-quarter movement
+  // into an unreadable sliver -- the gridline labels below (metric.fmt(v))
+  // keep a non-zero axis honest, same reasoning as the small KPI charts.
+  let yMax, yMin;
+  if (metric.mark === "bar") {
+    yMax = Math.max(0, ...allVals) * 1.15 || 1;
+    yMin = Math.min(0, ...allVals) * 1.15;
+  } else {
+    const dataMax = Math.max(...allVals), dataMin = Math.min(...allVals);
+    const pad = (dataMax - dataMin) * 0.15 || Math.abs(dataMax) * 0.1 || 1;
+    yMax = dataMax + pad; yMin = dataMin - pad;
+  }
   const x = i => ML + (dateIdxs.length === 1 ? plotW / 2 : (i / (dateIdxs.length - 1)) * plotW);
   const y = v => MT + plotH - ((v - yMin) / (yMax - yMin || 1)) * plotH;
 
@@ -821,7 +848,8 @@ function renderCompareChartSvg(seriesList, blended, metric) {
     svg.appendChild(svgEl("line", { class: "gridline", x1: ML, x2: W - MR, y1: gy, y2: gy }));
     svg.appendChild(Object.assign(svgEl("text", { x: ML - 8, y: gy + 3, "text-anchor": "end", "font-size": "10.5" }), { textContent: metric.fmt(v) }));
   });
-  svg.appendChild(svgEl("line", { class: "axis-line", x1: ML, x2: W - MR, y1: y(0), y2: y(0) }));
+  const axisY = (yMin <= 0 && yMax >= 0) ? y(0) : MT + plotH; // zero may be outside the range for an auto-scaled rate axis
+  svg.appendChild(svgEl("line", { class: "axis-line", x1: ML, x2: W - MR, y1: axisY, y2: axisY }));
 
   const labelStep = Math.max(1, Math.ceil(dateIdxs.length / 9));
   dateIdxs.forEach((idx, i) => {

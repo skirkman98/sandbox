@@ -945,3 +945,72 @@ lower-tier customers revolve more); confirmed KPI tiles/trend chart still
 reproduce the exact known headline numbers with no selection made (no
 regression from the `matchesFilter`/`skipVintage` change); checked both
 dark and light mode; no console errors.
+
+---
+
+## Day 2 — Fixed: driver KPI charts were hiding real seasonality (2026-08-26)
+
+Caught after the fact, by the user, looking at the shipped dashboard:
+PPAA visibly showed the new seasonal saw-tooth, but Active Rate, Payment
+Rate, and NIM looked flat even in the *actuals* period — real historical
+data, untouched by anything built today, so if seasonality were genuinely
+absent from those series specifically, that would itself be a legitimate
+and interesting finding. It wasn't absent. It was being hidden by a
+charting bug.
+
+**Checked the raw actuals directly** (same detrend-and-residual method as
+the seasonality analysis, generalized to any line item) before touching any
+code — never assume a chart is right just because it renders without
+errors:
+
+| Line item | Swing | Phase |
+|---|---|---|
+| Net Transaction Volume | 85.5% | Q4 peak / Q1 trough |
+| In-Month Active Accounts | 22.2% | Q4 peak / Q1 trough (same phase as NTV) |
+| Total Accounts | 0.3% | flat (cumulative stock, doesn't fluctuate) |
+| Outstanding Balance | 24.4% | Q4 peak / Q1 trough |
+| Revolve Balance | 23.4% | **Q1 peak** — one quarter behind NTV |
+| Principal Payments | 24.3% | Q4 peak |
+| Interest Revenue | 22.7% | Q1 peak (matches Revolve Balance, its driver basis) |
+| Cost of Funds | 13.9% | Q4-leaning, smaller magnitude |
+
+Every one of these has real, material seasonality in the actuals — Active
+Rate's ~22% swing is smaller than NTV's 85% but genuinely there every
+single year (Q1'23-Q1'26: 59.9%, 59.1%, 57.8%, 56.7%; Q4'23-Q4'25: 71.3%,
+69.7%, 68.5%). Payment Rate and NIM are noisier (both ratios mix a
+Q4-peak-phase component against a Q1-peak-phase component, so they partly
+offset rather than reinforce the way PPAA's components do — worth knowing,
+not itself a bug), but recomputing the exact quarterly values by hand
+confirmed a real recurring wave in both once the early-portfolio period
+(Q1-Q4 2023, before the book had scale) is looked past.
+
+**Root cause, once the data was confirmed to actually have the signal**:
+`renderSmallLineChart()` (the 6 driver-KPI small multiples) and
+`renderCompareChartSvg()`'s line-mode path (item 6) both forced the y-axis
+to always include zero — `Math.min(0, ...)` on the lower bound — the same
+convention used everywhere else on this page for $ magnitudes, where
+showing the zero baseline is meaningful context. For a rate/ratio metric
+living in a narrow band far from zero (Active Rate 57%-71%, NIM 1.5%-3.5%),
+forcing zero into the axis compresses the entire real range into a thin
+sliver at the top of a mostly-empty chart — the seasonality was fully
+present in the underlying numbers the whole time, just visually crushed to
+invisibility.
+
+**Fix**: both renderers now auto-scale line-type charts to the actual data
+range (with ~15-18% padding), and explicitly label the max/min on the small
+multiples (and keep the existing gridline labels on the compare chart) —
+a non-zero axis is legitimate practice for a line chart *as long as the
+scale is disclosed*, which it now is; the earlier version's problem wasn't
+the missing-zero, it was rendering with no scale disclosure at all *and* an
+implicit zero anchor that made a real signal invisible. The zero-baseline
+axis-line is still drawn where it stays honestly meaningful (bar-mode
+metrics, which can cross zero) and simply repositioned to the plot's bottom
+edge when zero falls outside a rate chart's range.
+
+**Verified**: rebuilt and re-viewed via claude-in-chrome — all 6 driver KPI
+charts and the compare chart's line mode now show clear, correctly-labeled
+seasonal waves matching the table above (Active Rate 56.7%-71.3%, Payment
+Rate 41.3%-130.5% — the early-portfolio spike is now visible too, not just
+implied — NIM 1.5%-3.5%, Revolve Rate 22.5%-45.0%, Revenue Margin
+4.5%-11.7%); no console errors; dashboard-only fix, `08_audit.py` unaffected
+(still 7/8).
