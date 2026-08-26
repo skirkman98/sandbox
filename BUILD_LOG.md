@@ -700,3 +700,80 @@ here to keep the Day 2 fix layered and contained rather than touching every
 balance-driven line item at once. Check B's audit message now reports the
 actuals-vs-forecast split explicitly so this doesn't read as a regression if
 someone reruns the audit and sees the number moved.
+
+---
+
+## Day 2 — Full-detail P&L dashboard view (2026-08-26)
+
+TODO item 4: a traditional, full-detail P&L view on `dashboard.html` — all 33
+raw line items (not just the 4 shipped P&L buckets), for anyone who wants to
+audit the rollup rather than take the 4-bucket summary on faith.
+
+**Shared prerequisite, done once for this item and item 7 together**:
+`scripts/10_export_dashboard_data.py` previously exported only the 4 P&L
+bucket totals + New Accounts per row. Rewritten to also ship a `detail`
+array at the same grain, keyed by short abbreviations (extends the existing
+`gr`/`cos`/`opex`/`acq`/`na` convention — e.g. `ntv`, `os`, `rw`), with a
+`dims.lineItemKeys` legend (label + `Aggregation`: Flow/Stock + `Unit`: $/Count
+per item) and a `dims.lineItemGroups` list giving the traditional statement
+order directly, so `11_build_dashboard.py` doesn't re-derive grouping logic
+in JS. Also added a `data/line_item_classification.csv` `Aggregation` column
+(Flow/Stock) and a `Unit` column ($/Count) — the authoritative source both
+this export and any future consumer should read from, rather than
+hardcoding which line items are counts vs. dollars in JS.
+
+**The one real design risk, and how it was avoided**: `Total Accounts`,
+`Outstanding Balance`, `Revolve Balance`, and `EoP Interest & Fees Balance`
+are STOCKS (period-end snapshots) — summing them across a multi-quarter
+filter range would be meaningless, the same bug class the `cohorts` array
+already exists to prevent for LTV/CAC (see that array's own note above).
+Fix: the detail table is rendered **transposed** — line items as rows,
+quarters as columns — so the only summing that ever happens is *across
+entities (merchants/vintages/FICO tiers) within one quarter*, which is
+always valid for a stock, never *across quarters*, which wouldn't be. Stock
+line items are marked with `*` in the UI as a visible reminder even though
+the layout makes the wrong operation structurally unavailable, not just
+discouraged.
+
+**Scope resolution on the "34 raw line items" wording**: `CAC / New Account`
+(the 34th row of the classification CSV) is an `Excluded-Metric` pre-computed
+reference ratio — including it in a summable array would violate this
+project's core "never sum a pre-computed ratio" invariant (the same one
+`derivePnl()` already enforces for margins). Shipped the other 33 in
+`detail`; the reference figure isn't surfaced in this view (it exists to
+reconcile CAC against the source data's own figure, already done once in
+`08_audit.py` Check D, not to be re-derived per filter combination).
+
+**JSON size**: measured, not guessed. The new `detail` array plus a
+precomputed `bos` (Beginning Outstanding Balance) lag field (see item 7 below)
+brought `dashboard_data.json` from 1.2MB to 4.8MB — a real but sub-linear
+multiplier, still comfortably in the range where a plain inline array in a
+`file://`-opened static HTML page stays responsive. Shipped as one inline
+array; no lazy-fetch needed. The detail `<section>` itself is still
+lazy-*rendered* (the JS only populates the table's DOM when the `<details>`
+disclosure is actually opened) since it's an appendix view most visits won't
+expand, and rebuilding a 33-row x ~22-column table on every filter change for
+a collapsed section would be pure waste.
+
+**UI**: `<details><summary>Show detailed line items (all 33, audit
+view)</summary>` under the existing "Quarterly P&L detail" table, collapsed
+by default. Grouped in the traditional order (Volumes & Balances → Revenue →
+Cost of Sales → Operating Expense → Acquisition Cost), sticky first column
+and sticky header for a wide/tall table, same Merchant/Vintage/FICO/Period
+filter reactivity as the rest of the page. Count-type line items (New
+Accounts, Total Accounts, In-Month Active Accounts) render as plain
+integers, not `$`-prefixed — an earlier draft used the dollar formatter
+uniformly and mislabeled account counts as dollar amounts, caught in visual
+QA and fixed by threading the new `Unit` field through instead of hardcoding
+which 3 line items are counts in JS.
+
+**Verified**: pipeline rerun end-to-end (`08_audit.py` still 6/7, no new
+fails); visual QA via claude-in-chrome — expanded the section, confirmed
+group order and the traditional Volumes→Revenue→COS→OpEx→AcqCost sequence,
+confirmed New Accounts/Total Accounts/Active Accounts show as counts (e.g.
+23,883, matching the existing summary table's own New Accounts column
+exactly) while every other line item shows `$`, confirmed the forecast
+period's seasonal saw-tooth (Day 2's seasonality change, above) is visible
+in Net Transaction Volume's columns, filtered to Merchant 7 and confirmed
+every column dropped to that merchant's own (much smaller) scale with no
+console errors.

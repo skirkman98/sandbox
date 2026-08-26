@@ -124,6 +124,22 @@ HTML_TEMPLATE = r"""<!doctype html>
   .table-scroll table.datatable th { top: -1px; }
   td.neg { color: var(--red); }
 
+  /* Detail P&L view (item 4) -- transposed (line items as rows, quarters as
+     columns), so a Stock/snapshot line item is only ever summed across
+     entities WITHIN one quarter (always valid), never across the columns
+     (quarters) themselves. Needs both x and y scroll -- 33 line items x up
+     to 22 quarters. */
+  details.detail-toggle { margin-top: 0.4rem; }
+  details.detail-toggle > summary { cursor: pointer; font-size: 0.88rem; color: var(--blue); padding: 0.3rem 0; list-style: none; }
+  details.detail-toggle > summary::-webkit-details-marker { display: none; }
+  details.detail-toggle > summary::before { content: "▸ "; }
+  details.detail-toggle[open] > summary::before { content: "▾ "; }
+  .detail-table-scroll { max-height: 560px; overflow: auto; border: 1px solid var(--grid); border-radius: 8px; margin-top: 0.6rem; }
+  table.detail-table th, table.detail-table td { white-space: nowrap; }
+  table.detail-table th:first-child, table.detail-table td:first-child { position: sticky; left: 0; background: var(--surface); z-index: 1; }
+  tr.group-row td { text-align: left; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); background: var(--page); padding-top: 0.55rem; }
+  tr.group-row td:first-child { background: var(--page); }
+
   .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
   footer.page-foot { color: var(--muted); font-size: 0.8rem; margin-top: 2rem; }
 </style>
@@ -216,6 +232,17 @@ HTML_TEMPLATE = r"""<!doctype html>
       <tbody></tbody>
     </table>
   </div>
+
+  <details class="detail-toggle" id="detail-toggle">
+    <summary>Show detailed line items (all 33, audit view)</summary>
+    <p class="panel-note">All raw line items behind the 4 P&amp;L buckets above, in traditional statement order (Volumes &amp; Balances, Revenue, Cost of Sales, Operating Expense, Acquisition Cost) &mdash; quarters as columns. Reflects the same filters as the rest of this page. Each cell is that column's own quarter, summed across whichever merchants/vintages/FICO tiers are selected &mdash; balance/snapshot line items (marked *) are never summed across quarters, only within one.</p>
+    <div class="detail-table-scroll">
+      <table class="datatable detail-table" id="detail-table">
+        <thead><tr id="detail-table-head"></tr></thead>
+        <tbody id="detail-table-body"></tbody>
+      </table>
+    </div>
+  </details>
 </section>
 
 <footer class="page-foot">Built from combined_actuals_forecast.parquet via scripts/10_export_dashboard_data.py + 11_build_dashboard.py. See <a href="pitch_deck.html">pitch_deck.html</a> for methodology and <a href="narrative_report.html">narrative_report.html</a> for the full written narrative.</footer>
@@ -530,6 +557,49 @@ function renderTable(f) {
   }).join("");
 }
 
+// Detail P&L view (item 4). Filters DATA.detail (same grain as DATA.rows)
+// with the existing matchesFilter, groups into one column per Report Date
+// Index, and for each line item sums across matching Merchant/Vintage/FICO
+// rows WITHIN that one quarter only -- a Stock line item (marked * in the
+// legend) is always safe to sum across entities at a single point in time,
+// it's summing ACROSS quarters that would be wrong, and this transposed
+// layout never does that (each column stays its own quarter). Lazy-rendered
+// -- only recomputed when the <details> section is actually open, since it's
+// an audit/appendix view most visits won't expand.
+function renderDetailTable(f) {
+  const rows = DATA.detail.filter(r => matchesFilter(r, f));
+  const byDate = groupBy(rows, r => r.r);
+  const dateIdxs = [...byDate.keys()].sort((a, b) => a - b);
+
+  const headRow = document.getElementById("detail-table-head");
+  headRow.innerHTML = "<th>Line item</th>" + dateIdxs.map(idx => {
+    const d = DATA.dims.reportDates.find(d => d.idx === idx);
+    return `<th>${d.label}</th>`;
+  }).join("");
+
+  const body = document.getElementById("detail-table-body");
+  if (dateIdxs.length === 0) {
+    body.innerHTML = `<tr><td colspan="1">No data for this filter combination.</td></tr>`;
+    return;
+  }
+  const colCount = dateIdxs.length + 1;
+  let html = "";
+  for (const group of DATA.dims.lineItemGroups) {
+    html += `<tr class="group-row"><td colspan="${colCount}">${group.group}</td></tr>`;
+    for (const item of group.items) {
+      const isStock = item.aggregation === "Stock";
+      const fmt = item.unit === "Count" ? fmtInt : fmtMoney;
+      const cells = dateIdxs.map(idx => {
+        let sum = 0;
+        for (const r of byDate.get(idx)) sum += (r[item.key] || 0);
+        return `<td class="${sum < 0 ? "neg" : ""}">${fmt(sum)}</td>`;
+      }).join("");
+      html += `<tr><td>${item.label}${isStock ? " *" : ""}</td>${cells}</tr>`;
+    }
+  }
+  body.innerHTML = html;
+}
+
 function renderFilterSummary(f) {
   const parts = [];
   parts.push(f.merchant === "all" ? "All merchants" : f.merchant);
@@ -547,7 +617,13 @@ function renderAll() {
   renderComparisonChart("merchant-chart", "m", DATA.dims.merchants.map(m => ({value: m, label: m})), f, { skipMerchant: true });
   renderComparisonChart("fico-chart", "f", DATA.dims.ficoBuckets.map(v => ({value: v, label: v})), f, { skipFico: true });
   renderTable(f);
+  const detailToggle = document.getElementById("detail-toggle");
+  if (detailToggle.open) renderDetailTable(f);
 }
+
+document.getElementById("detail-toggle").addEventListener("toggle", (e) => {
+  if (e.target.open) renderDetailTable(currentFilters());
+});
 
 [els.merchant, els.vintage, els.fico, els.scenario].forEach(el => el.addEventListener("change", renderAll));
 document.getElementById("reset-filters").addEventListener("click", () => {
