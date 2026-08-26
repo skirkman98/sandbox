@@ -217,9 +217,9 @@ HTML = f"""<!doctype html>
     <li>Cohorts whose window runs past the Q2 2028 cutoff are extended with a <strong>population-level fill</strong> (what did this kind of cohort typically look like at that age), not a compounding growth factor &mdash; Contribution Profit per account is a signed quantity that crosses zero, and a multiplicative factor is the wrong tool for that (see the bug log).</li>
   </ul>
   <div class="stat-row">
-    <div class="stat"><div class="n">0.82x</div><div class="l">portfolio LTV/CAC</div></div>
-    <div class="stat"><div class="n">2.97x</div><div class="l">Poor FICO tier</div></div>
-    <div class="stat"><div class="n">-0.39x</div><div class="l">Exceptional FICO tier</div></div>
+    <div class="stat"><div class="n">0.75x</div><div class="l">portfolio LTV/CAC</div></div>
+    <div class="stat"><div class="n">2.93x</div><div class="l">Poor FICO tier</div></div>
+    <div class="stat"><div class="n">-0.47x</div><div class="l">Exceptional FICO tier</div></div>
   </div>
 </section>
 
@@ -255,7 +255,7 @@ HTML = f"""<!doctype html>
   <div class="check-row"><span>D &mdash; Forecast CAC/account vs. historical, per merchant</span><span class="status pass">PASS</span></div>
   <div class="check-row"><span>E &mdash; Cohort LTV magnitude sanity (regression guard)</span><span class="status pass">PASS</span></div>
   <div class="check-row"><span>F &mdash; Independent trend cross-check vs. naive linear regression</span><span class="status pass">PASS</span></div>
-  <p style="margin-top:1.2rem">Also reviewed with an automated static-analysis pass (89.6/100 average, grade B, zero SOLID violations, zero security findings) &mdash; the one real finding was the complexity of the forecast engine's core loop, the same function that hid bug #1 above.</p>
+  <p style="margin-top:1.2rem">Also reviewed with an automated static-analysis pass (81.2/100 average, grade B, zero SOLID violations, zero security findings) &mdash; the one real finding was the complexity of the forecast engine's core loop, the same function that hid bug #1 above.</p>
 </section>
 
 <section class="slide alt">

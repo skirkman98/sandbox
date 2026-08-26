@@ -224,7 +224,11 @@ def main():
     fcst = pnl[pnl["Scenario"] == "Base Case"]
     total_gr_8q = fcst["Gross Revenue"].sum()
     total_cp_8q = fcst["Contribution Profit"].sum()
-    avg_cm = fcst["Contribution Margin %"].mean()
+    # Revenue-weighted (sum CP / sum GR), not a naive mean of each quarter's
+    # own margin % -- immaterial today since quarterly margin is nearly flat,
+    # but the same "average of ratios" anti-pattern found elsewhere in a
+    # 2026-08-26 audit pass, fixed here for consistency.
+    avg_cm = total_cp_8q / total_gr_8q
 
     # ---- Slide 4: aging mix ----
     age_mix_q = age_mix.copy()
@@ -251,7 +255,16 @@ def main():
     # Pad shorter series is unnecessary for the chart fn since each line uses its own x positions;
     # build a dedicated small multiline chart instead of reusing svg_line_chart (different x-domain per series).
     def svg_cohort_chart(series, width=860, height=300, aria_label=""):
-        ML, MR, MT, MB = 58, 20, 16, 40
+        ML, MT, MB = 58, 16, 40
+        # Right margin must fit the widest end-of-line label -- these are
+        # full text phrases ("Oldest (Q1 2023)"), not short $ figures like
+        # svg_line_chart's end-labels, so the fixed 20px margin that works
+        # there clipped longer labels against the page edge (found by a
+        # 2026-08-26 visual QA pass). Sized from the actual label text
+        # rather than another hardcoded guess, so it stays correct if the
+        # labels change again.
+        longest_label = max((len(label) for _, label, *_ in series), default=0)
+        MR = max(20, 14 + longest_label * 6.6)
         plot_w, plot_h = width - ML - MR, height - MT - MB
         all_qsb = [q for *_ , qsbs in series for q in qsbs]
         all_vals = [v for _, _, _, vals, _ in series for v in vals]
@@ -486,6 +499,7 @@ HTML_TEMPLATE = """<!doctype html>
     <div class="stat"><div class="n">{total_cp_8q}</div><div class="l">8-quarter Contribution Profit</div></div>
     <div class="stat"><div class="n">{avg_cm}</div><div class="l">average Contribution Margin</div></div>
   </div>
+  <p style="font-size:0.85rem;color:var(--muted);max-width:660px;margin-top:1rem">Contribution Profit reflects the ongoing unit economics of the existing book &mdash; it does not net out Acquisition Cost / CAC. CAC is evaluated separately via LTV/CAC (Chapter 7) because it's recovered over a customer's lifetime, not expensed in the quarter it's spent.</p>
 </section>
 
 <section class="slide alt">

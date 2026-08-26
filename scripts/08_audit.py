@@ -328,7 +328,12 @@ def check_e_ltv_sanity():
     cp_raw = cp_raw.merge(na, on=["Merchant", "Vintage Index", "FICO Bucket"])
     cp_raw["CP per Account"] = cp_raw["CP"] / cp_raw["NA"]
 
-    global_curve = cp_raw.groupby("QSB")["CP per Account"].mean().sort_index()
+    # Weighted (sum CP / sum NA), not a naive mean of each cohort's own
+    # ratio -- same "average of ratios" bug found (and fixed) independently
+    # in 06_pnl_rollup.py's build_cp_population_curve on 2026-08-26. Fixed
+    # here too, separately, since this check is deliberately not importing
+    # 06's code -- see this function's own docstring on why that matters.
+    global_curve = cp_raw.groupby("QSB").apply(lambda g: g["CP"].sum() / g["NA"].sum()).sort_index()
 
     ltv_values = []
     for (merchant, vintage_idx, fico), sub in cp_raw.groupby(["Merchant", "Vintage Index", "FICO Bucket"]):

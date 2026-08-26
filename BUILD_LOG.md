@@ -331,9 +331,16 @@ are not the same thing here, and Merchant 2 in particular deserves scrutiny on
 - Gross Revenue: $1.50B
 - Gross Profit: $198.6M (13.3% average Gross Margin)
 - Contribution Profit: $170.8M (11.4% average Contribution Margin)
-- Portfolio-weighted LTV/CAC: **0.82x** (below breakeven — driven by the FICO-tier
+- Portfolio-weighted LTV/CAC: **0.75x** (below breakeven — driven by the FICO-tier
   dynamic above; several individual merchants and FICO tiers clear >1.9x, up to
-  Merchant 5's 1.92x)
+  Merchant 5's 2.07x). *(Revised 2026-08-26 from an earlier-reported 0.82x — an
+  audit pass found `build_cp_population_curve`'s LTV-extrapolation fill averaged
+  each cohort's own CP/Account ratio unweighted by cohort size, overstating the
+  population-level curve by 13%-140% depending on cohort age. Fixed to weight by
+  New Accounts; see "Weighted-average and independent tie-out audit" below. Only
+  cohort-level LTV/CAC figures moved — Gross Revenue/Gross Profit/Contribution
+  Profit $ and the P&L margins above are unaffected, since they don't touch this
+  curve.)*
 
 Full detail, charts, and the merchant/FICO cuts are in `output/narrative_report.html`.
 
@@ -430,3 +437,73 @@ overrides the OS preference; visually confirmed in both themes via the same
 browser-driven check as above, including the toggle actually flipping the
 theme and dashboard.html's charts re-rendering with the correct dark-mode hex
 values.
+
+---
+
+## Weighted-average and independent tie-out audit (2026-08-26)
+
+Two more independent passes, run in parallel: (1) an exhaustive check that
+every portfolio/merchant/FICO-tier average in the codebase is driver-weighted
+(Σnumerator/Σdenominator) rather than a naive mean of pre-computed ratios —
+prompted by this file's own earlier claim that the principle is "enforced
+everywhere," which turned out not to hold exhaustively; (2) a from-scratch
+reconciliation of every output file back to `data/case_study_data.csv`,
+written without importing any code from `scripts/`, to catch anything a
+shared bug could hide from the pipeline's own audit.
+
+**The tie-out audit found nothing wrong** — `pnl_consolidated.csv`'s actuals
+rows, `pnl_by_merchant.csv`, `clean_actuals.parquet`, the CAC-vs-reference
+reconciliation (0.29% median, reproducing the earlier claim almost exactly),
+`cohort_ltv_cac_by_fico.csv`/`ltv_cac_by_merchant.csv` for the 20 cohorts
+whose full 12-quarter LTV window is actually observed (not extrapolated),
+`cohort_balance_age_mix.csv`, and `curve_dev_factors.csv` all reproduced
+exactly from raw data via completely independent code.
+
+**The weighted-average audit found one real bug, in the one place that
+mattered most.** `build_cp_population_curve()` (`06_pnl_rollup.py`) — the
+function that fills in a cohort's Contribution-Profit-per-Account at any QSB
+it hasn't lived long enough to observe, i.e. the LTV extrapolation mechanism
+described above — computed "what a typical cohort looks like at this age" as
+a flat `.mean()` of each cohort's own CP/Account ratio, not weighted by that
+cohort's New Accounts. A 580-account FICO-tier cohort counted the same as a
+14,958-account one. Verified independently before fixing: the naive mean
+overstated the true accounts-weighted value by **13%-140% depending on QSB**
+(worst at the earliest ages, exactly where the thinnest cohorts — Merchants
+9 and 10 — lean on this fill the most). The identical bug was independently
+re-derived from scratch in `08_audit.py`'s Check E (the check specifically
+designed to *not* import 06's code so a shared bug can't hide from it — it
+didn't share the bug, it reintroduced it separately), and a much smaller,
+currently-immaterial version of the same anti-pattern (an unweighted mean of
+8 quarterly margin percentages instead of Σ Contribution Profit/Σ Gross
+Revenue) was found in `09_build_narrative_deck.py`'s `avg_cm` stat.
+
+**Fixed in all three places** — `06_pnl_rollup.py`, `08_audit.py`, and
+`09_build_narrative_deck.py` now all weight by the cohort's New Accounts (or
+Gross Revenue, for the quarterly margin case) before averaging. Pipeline
+rerun end-to-end; every downstream number that depends on the LTV
+extrapolation curve moved:
+
+| Figure | Before | After |
+|---|---|---|
+| Portfolio LTV/CAC | 0.82x | **0.75x** |
+| Merchant 7 LTV/CAC | -0.19x | **-0.51x** |
+| Merchant 2 LTV/CAC | 0.45x | **0.31x** |
+| Merchant 1 LTV/CAC | 0.75x | **0.66x** |
+| Merchant 5 LTV/CAC (highest) | 1.92x | **2.07x** |
+| Exceptional-FICO LTV/CAC | -0.39x | **-0.47x** |
+| Very Good-FICO LTV/CAC | 0.24x | **0.16x** |
+| Newest (1-quarter) cohorts' LTV/CAC range | 0.01x to 3.0x | **-0.53x to 3.57x** |
+
+Nothing else moved: Gross Revenue/Gross Profit/Contribution Profit dollar
+figures, the P&L margins, `audit_results.csv`'s pass/fail statuses (still
+5/6, Check B's explained FAIL unchanged), and every actuals-groundable
+number the tie-out audit checked are all untouched, since none of them
+depend on the LTV extrapolation curve. The direction of every finding this
+model has already leaned on (FICO-tier inversion, Merchant 7 as the clear
+structural drag) got *stronger*, not weaker or reversed — this was a
+magnitude correction, not a different conclusion. `dashboard.html` and
+`narrative_report.html` picked up the corrected numbers automatically on
+rerun (both compute live/at-build-time from the regenerated CSVs/JSON);
+`pitch_deck.html`'s hardcoded LTV/CAC stat tiles were updated by hand to
+match, since that file (a known, separately-flagged issue) doesn't read from
+`output/` at build time.

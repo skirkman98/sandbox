@@ -142,13 +142,26 @@ MATURE_QSB_FALLBACK = True  # kept as a named toggle so the intent reads at the 
 
 def build_cp_population_curve(cp: pd.DataFrame) -> tuple:
     """Returns (per_merchant_curve: {merchant: Series indexed by QSB},
-    global_curve: Series indexed by QSB) of mean CP-per-Account -- used to
-    fill in any QSB a cohort hasn't lived long enough to observe."""
+    global_curve: Series indexed by QSB) of New-Accounts-weighted average
+    CP-per-Account -- used to fill in any QSB a cohort hasn't lived long
+    enough to observe.
+
+    Weighted (sum Contribution Profit / sum New Accounts), not a naive mean
+    of each cohort's own CP-per-Account ratio -- a 580-account cohort and a
+    14,958-account cohort otherwise count equally, which systematically
+    overstates the population level (found by a 2026-08-26 audit pass:
+    naive mean overstated the accounts-weighted true value by 13%-140%
+    depending on QSB, understating how negative the FICO-tier/Merchant-7
+    findings actually are, since this curve feeds every extrapolated
+    cohort's LTV)."""
+    def _weighted(g: pd.DataFrame) -> float:
+        return g["Contribution Profit"].sum() / g["New Accounts"].sum()
+
     per_merchant = {
-        merchant: sub.groupby("QSB")["CP per Account"].mean().sort_index()
+        merchant: sub.groupby("QSB").apply(_weighted).sort_index()
         for merchant, sub in cp.groupby("Merchant")
     }
-    global_curve = cp.groupby("QSB")["CP per Account"].mean().sort_index()
+    global_curve = cp.groupby("QSB").apply(_weighted).sort_index()
     return per_merchant, global_curve
 
 

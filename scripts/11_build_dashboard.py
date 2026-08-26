@@ -415,13 +415,35 @@ function renderTrendChart(f) {
     series.forEach((s,i) => {
       svg.appendChild(svgEl("circle", { class: "series-dot", cx: x(i), cy: y(s[key]), r: 3, fill: color }));
     });
-    const last = series[series.length-1];
-    const lx = Math.min(x(series.length-1) + 6, W - MR - 2);
-    svg.appendChild(Object.assign(svgEl("text", { x: lx, y: y(last[key]) + 3, "font-size": "10.5", fill: color, "font-weight": "600" }), { textContent: fmtMoney(last[key]) }));
   }
   drawSeries("gr", PALETTE.blue);
   drawSeries("gp", PALETTE.aqua);
   drawSeries("cp", PALETTE.orange);
+
+  // End labels: drawn after all lines, with a greedy vertical-separation
+  // pass so two series ending at similar values (Gross Profit and
+  // Contribution Profit routinely land close together) don't render as
+  // overlapping, illegible text. Mirrors the fix already applied to the
+  // Python-side chart helpers in 09_build_narrative_deck.py -- this is a
+  // separate, from-scratch SVG renderer, so it needed its own copy of the
+  // same fix (found by a 2026-08-26 visual QA pass: the two labels
+  // rendered fully on top of each other in the default dashboard view).
+  const last = series[series.length - 1];
+  const lastX = Math.min(x(series.length - 1) + 6, W - MR - 2);
+  const labelSpecs = [
+    { color: PALETTE.blue, text: fmtMoney(last.gr), y: y(last.gr) },
+    { color: PALETTE.aqua, text: fmtMoney(last.gp), y: y(last.gp) },
+    { color: PALETTE.orange, text: fmtMoney(last.cp), y: y(last.cp) },
+  ].sort((a, b) => a.y - b.y);
+  const MIN_LABEL_GAP = 13;
+  for (let i = 1; i < labelSpecs.length; i++) {
+    if (labelSpecs[i].y - labelSpecs[i - 1].y < MIN_LABEL_GAP) {
+      labelSpecs[i].y = labelSpecs[i - 1].y + MIN_LABEL_GAP;
+    }
+  }
+  labelSpecs.forEach(lp => {
+    svg.appendChild(Object.assign(svgEl("text", { x: lastX, y: lp.y + 3, "font-size": "10.5", fill: lp.color, "font-weight": "600" }), { textContent: lp.text }));
+  });
 
   container.appendChild(svg);
 
@@ -473,14 +495,15 @@ function renderKpiTiles(f) {
   const tiles = [
     { label: "Gross Revenue", value: fmtMoney(t.gr) },
     { label: "Gross Profit", value: fmtMoney(t.grossProfit), sub: fmtPct(t.grossMarginPct) + " margin" },
-    { label: "Contribution Profit", value: fmtMoney(t.contributionProfit), sub: fmtPct(t.contributionMarginPct) + " margin", cls: t.contributionProfit < 0 ? "neg" : "" },
+    { label: "Contribution Profit", value: fmtMoney(t.contributionProfit), sub: fmtPct(t.contributionMarginPct) + " margin", cls: t.contributionProfit < 0 ? "neg" : "",
+      title: "Reflects ongoing unit economics of the existing book -- does not net out Acquisition Cost / CAC, which is recovered over a customer's lifetime and evaluated separately via LTV/CAC." },
     { label: "New Accounts", value: fmtInt(t.na) },
     { label: "CAC / Account", value: isFinite(t.cacPerAccount) ? fmtMoney(t.cacPerAccount) : "—" },
     { label: "LTV / CAC", value: fmtX(t.ltvCac), cls: (isFinite(t.ltvCac) && t.ltvCac < 1) ? "neg" : (isFinite(t.ltvCac) ? "pos" : "") },
   ];
   const row = document.getElementById("kpi-row");
   row.innerHTML = tiles.map(tile => `
-    <div class="kpi-tile">
+    <div class="kpi-tile"${tile.title ? ` title="${tile.title}"` : ""}>
       <div class="label">${tile.label}</div>
       <div class="value ${tile.cls||""}">${tile.value}</div>
       ${tile.sub ? `<div class="sub">${tile.sub}</div>` : ""}
