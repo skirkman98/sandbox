@@ -1,7 +1,7 @@
 """
 pnl_utils.py
 
-Shared P&L bucketing logic used by 06_pnl_rollup.py and 07_cohort_views.py.
+Shared P&L bucketing logic used by core_engine/05_pnl_rollup.py and core_engine/06_cohort_views.py.
 Previously duplicated near-verbatim in both files -- pulled out after the
 duplication let the same bug ship in both places at once (see BUILD_LOG.md:
 Partner Signing Bonus was keyed off Category, not Model Role, so it leaked

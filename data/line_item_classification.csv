@@ -14,7 +14,7 @@ Revenue,Non Interest Income,Interchange Revenue,Rate-Derived,Net Transaction Vol
 Revenue,Non Interest Income,Merchant Discount Rate,Rate-Derived,Net Transaction Volume,Flow,$,Rate = MDR rate
 Revenue,Non Interest Income,Fee Revenue,Rate-Derived,Outstanding Balance,Flow,$,Empirically weak driver relationship (best corr ~0.47 vs Outstanding Balance) - flag as a data gap in narrative; likely driven by delinquency/behavior fields not in this dataset
 Revenue,Other Revenue,Other Revenue,Rate-Derived,In-Month Active Accounts,Flow,$,Confirmed empirically: corr 0.99 vs In-Month Active Accounts
-Contra revenue,Cost of Funds,Cost of Funds,Rate-Derived,Outstanding Balance,Flow,$,Rate = cost-of-funds rate
+Contra revenue,Cost of Funds,Cost of Funds,Rate-Derived,Revolve Balance,Flow,$,"Rate = cost-of-funds rate; keyed to Revolve Balance (not Outstanding Balance) so funding cost moves with Interest Revenue's own basis, correcting a seasonality-composition mismatch that was distorting Gross/Contribution Profit"
 Losses,Charge-offs,Charge Offs,Rate-Derived,Outstanding Balance,Flow,$,Rate = quarterly loss rate; expect vintage curve shape
 Losses,Total Recoveries,Recoveries / Debt Sale,Rate-Derived,Charge Offs,Flow,$,Likely lagged relationship - confirm during build
 Expense,Fraud Losses,3rd Party Fraud,Rate-Derived,Net Transaction Volume,Flow,$,

@@ -1159,3 +1159,85 @@ now show real seasonal waves continuing through the forecast period
 (previously flat for everything but PPAA), and the top trend chart's
 KPI tiles/margins sit close to their pre-extension values with no
 console errors.
+
+## Day 2 — Cost of Funds driver basis fix, repo reorganization (2026-08-26)
+
+Flagged by the user: on the main dashboard's P&L trend chart, Gross Revenue's
+seasonality looked plausible, but Gross Profit and Contribution Profit's
+looked "wonky" — a much sharper, oddly-shaped Q1-high/Q4-low oscillation
+than Gross Revenue's own swing.
+
+**Root cause**: `line_item_classification.csv` had `Interest Revenue` keyed
+to `Driver Basis = Revolve Balance`, but `Cost of Funds` keyed to
+`Outstanding Balance`. Revolve Balance and Outstanding Balance carry their
+own, independently-estimated, out-of-phase seasonal indices (Revolve Balance
+peaks Q1; Outstanding Balance/NTV peak Q4 — see "Extending seasonality
+beyond NTV" above). Interest Revenue's swing therefore had no matching
+cost-side line riding the same basis to offset it, unlike NTV's own
+revenue/cost pairs (Interchange/MDR vs. Rewards/Royalties/etc.), which
+already self-cancel inside the margin. Since Gross Profit and Contribution
+Profit are thin residual margins (~5–15% of revenue), Interest Revenue's
+unhedged swing landed almost entirely in them.
+
+**Fix** (user's diagnosis, confirmed and implemented): Cost of Funds should
+move with the same basis as Interest Revenue — if Revolve Balance spikes,
+interest income and funding cost should move in the same direction. Changed
+`Cost of Funds`'s Driver Basis to `Revolve Balance` in
+`line_item_classification.csv`. Pure data-driven change — `curve_library.py`
+and `forecast_engine.py` both read Driver Basis dynamically from this file,
+so no code changes were needed for the fix itself, only a full pipeline
+rerun.
+
+**Impact**, full rerun:
+- Consolidated Gross Margin swing narrowed from a ~25pt Q1/Q4 oscillation
+  (peaks near 29% in Q1, troughs near 4% in Q4) to a ~12–13pt one (Q1 ≈
+  22–23%, Q4 ≈ 10%) — a meaningfully more plausible pattern, though a
+  smaller residual Q1-high tilt remains, likely from the same kind of
+  revenue/cost driver-basis mismatch on a smaller scale (e.g. Other
+  Revenue vs. Servicing & Collections, both Active-Accounts-driven but not
+  a matched pair) — not investigated further, out of scope of this fix.
+- Portfolio LTV/CAC: 0.78x → **0.85x**. Poor-tier LTV/CAC: 2.99x → 2.94x.
+  Exceptional-tier LTV/CAC: -0.45x → -0.32x (still negative, direction
+  unchanged). `pitch_deck.html`'s hardcoded stat tiles updated to match.
+- `08_audit.py` Check B unaffected by this fix (it tests the Outstanding
+  Balance/NTV roll-forward identity, not Interest Revenue/Cost of Funds) —
+  still 7/8, Check B FAIL-explained, as expected.
+
+**Verified**: full pipeline rerun end-to-end; `08_audit.py` still 7/8 with
+identical check results elsewhere; hand-inspected `pnl_consolidated.csv`'s
+quarterly margin sequence before and after; confirmed via grep that no
+script hardcodes "Cost of Funds" → "Outstanding Balance" anywhere outside
+the classification CSV, so the fix couldn't be silently overridden.
+
+### Repo reorganization (same session)
+
+Alongside the fix above: deleted the throwaway `03_actuals_explorer.py`
+(confirmed via grep it was referenced nowhere except its own docstring and
+one line in `README.md`) and its orphaned `output/_scratch_explorer/`
+PNGs; renumbered the remaining 14 scripts into a continuous sequence and
+split them into `scripts/core_engine/` (ingest through audit, plus the two
+Day 2 diagnostic scripts) and `scripts/reporting/` (the four HTML-deck
+builders); reorganized `output/` into `csv/`, `parquet/`, `html/`, and
+`json/` subfolders by file type. All in-script cross-references, `OUT_DIR`
+paths, and shared-module (`pnl_utils.py`/`viz_utils.py`) imports updated to
+match; `README.md`'s pipeline instructions rewritten for the new layout —
+this also surfaced a pre-existing dependency-order bug in the original
+numbering (`08_audit.py`'s Check H needs `dashboard_data.json`, built by
+the later-numbered `10_export_dashboard_data.py`; it only ever worked
+before because `output/` already had stale files from prior runs). The
+narrative deck's Chapter 4 cohort chart y-axis (previously unlabeled) now
+reads "Contribution Profit per Account ($)", matching the chart's existing
+x-axis title convention. `pitch_deck.html`'s bug write-ups were also
+genericized to themes rather than variable/number-level detail, and its
+Check B copy expanded to explain both the new-origination effect and the
+smaller forecast-period seasonal-composition gap in plain terms.
+
+**Verified**: full pipeline rerun end-to-end from the new script locations,
+zero errors; `output/` subfolder contents spot-checked against the
+pre-reorg flat file list (22 CSVs, 3 parquets, 4 HTML, 1 JSON, all
+accounted for); grepped for any remaining old-numbered filename reference
+across `scripts/` and found none outside `BUILD_LOG.md`/`TODO.md`/
+`REVIEW_FINDINGS.md` (left untouched by design — dated logs, not live
+docs); confirmed all four HTML outputs' cross-links are bare relative
+filenames (no `output/` prefix), so moving them together into `output/html/`
+didn't break navigation between them.

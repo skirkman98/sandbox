@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Imprint P&amp;L &mdash; The Portfolio Story</title>
+<style>
+  :root {
+    color-scheme: light;
+    --blue: #2a78d6; --orange: #eb6834; --aqua: #1baf7a; --red: #e34948; --yellow: #eda100;
+    --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --surface: #fcfcfb; --page: #f9f9f7; --baseline: #c3c2b7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --blue: #3987e5; --orange: #d95926; --aqua: #199e70; --red: #e66767; --yellow: #c98500;
+      --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --surface: #1a1a19; --page: #0d0d0d; --baseline: #383835;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --blue: #3987e5; --orange: #d95926; --aqua: #199e70; --red: #e66767; --yellow: #c98500;
+    --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --surface: #1a1a19; --page: #0d0d0d; --baseline: #383835;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--page); color: var(--ink); margin: 0; }
+  .deck { max-width: 980px; margin: 0 auto; }
+  nav.top-nav { position: sticky; top: 0; background: var(--page); border-bottom: 1px solid var(--grid); padding: 0.7rem 1.5rem; font-size: 0.85rem; z-index: 10; display: flex; justify-content: space-between; }
+  nav.top-nav a { color: var(--blue); text-decoration: none; margin-left: 1rem; }
+  nav.top-nav a:hover { text-decoration: underline; }
+  button.theme-toggle { margin-left: 1.1rem; font-size: 0.85rem; background: var(--surface); border: 1px solid var(--grid); color: var(--ink-2); border-radius: 999px; padding: 0.25rem 0.65rem; cursor: pointer; }
+  button.theme-toggle:hover { color: var(--ink); }
+
+  section.slide { padding: 3.2rem 1.75rem; border-bottom: 1px solid var(--grid); }
+  section.slide.alt { background: var(--surface); }
+  section.slide h1 { font-size: 2rem; margin: 0 0 0.3rem; }
+  section.slide h2 { font-size: 1.5rem; margin: 0 0 1.1rem; }
+  section.slide .kicker { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.5rem; }
+  section.slide p.lede { font-size: 1.1rem; color: var(--ink-2); max-width: 660px; }
+  section.slide p { line-height: 1.55; color: var(--ink-2); max-width: 760px; }
+  section.slide ul, section.slide ol { line-height: 1.6; color: var(--ink-2); padding-left: 1.3rem; max-width: 760px; }
+  section.slide li { margin-bottom: 0.5rem; }
+  section.slide strong { color: var(--ink); }
+
+  .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1.5rem 0; }
+  .stat { flex: 1; min-width: 155px; background: var(--surface); border: 1px solid var(--grid); border-radius: 10px; padding: 0.9rem 1.1rem; }
+  section.slide.alt .stat { background: var(--page); }
+  .stat .n { font-size: 1.5rem; font-weight: 700; }
+  .stat .l { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+  .stat .n.neg { color: var(--red); }
+
+  .legend-row { display: flex; gap: 1.1rem; flex-wrap: wrap; font-size: 0.85rem; margin-bottom: 0.7rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; color: var(--ink-2); }
+  .legend-swatch { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+
+  svg.chart-svg { width: 100%; height: auto; overflow: visible; }
+  svg.chart-svg text { font-family: inherit; }
+  .axis-text { font-size: 10.5px; fill: var(--muted); }
+  .axis-line { stroke: var(--baseline); stroke-width: 1; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .series-line { fill: none; stroke-width: 2.25; }
+  .series-dot { stroke: var(--surface); stroke-width: 1.5; }
+  .series-end-label { font-size: 11px; font-weight: 700; }
+  .bar-value-label { font-size: 11px; font-weight: 600; fill: var(--ink-2); }
+  .seam-band { fill: var(--blue); opacity: 0.06; }
+  .seam-label { font-size: 10.5px; fill: var(--muted); }
+
+  table.mini-table { border-collapse: collapse; width: 100%; font-size: 0.88rem; margin-top: 0.6rem; }
+  table.mini-table th { text-align: right; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--baseline); padding: 0.4rem 0.55rem; }
+  table.mini-table th:first-child, table.mini-table td:first-child { text-align: left; }
+  table.mini-table td { text-align: right; padding: 0.4rem 0.55rem; border-bottom: 1px solid var(--grid); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+  .risk-card { background: var(--surface); border-left: 3px solid var(--orange); border-radius: 0 8px 8px 0; padding: 0.85rem 1.1rem; margin-bottom: 0.9rem; max-width: 760px; }
+  section.slide.alt .risk-card { background: var(--page); }
+  .risk-card .risk-title { font-weight: 700; margin-bottom: 0.25rem; color: var(--ink); }
+
+  .cta-row { display: flex; gap: 0.9rem; margin-top: 1.4rem; flex-wrap: wrap; }
+  .cta-row a { display: inline-block; background: var(--blue); color: #fff; text-decoration: none; padding: 0.65rem 1.2rem; border-radius: 8px; font-weight: 600; font-size: 0.92rem; }
+  .cta-row a.secondary { background: transparent; color: var(--blue); border: 1px solid var(--blue); }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 2rem; }
+</style>
+</head>
+<body>
+<script>
+  (function() {
+    try {
+      const saved = localStorage.getItem("imprint-theme");
+      if (saved === "dark" || saved === "light") document.documentElement.setAttribute("data-theme", saved);
+    } catch (e) {}
+  })();
+</script>
+<nav class="top-nav">
+  <span><strong>Imprint P&amp;L</strong> &middot; The Portfolio Story</span>
+  <span><a href="unified_narrative.html">Overview</a><a href="dashboard.html">Executive dashboard</a><a href="pitch_deck.html">How this was built</a><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9789;</button></span>
+</nav>
+
+<div class="deck">
+
+<section class="slide">
+  <div class="kicker">The Imprint Portfolio &middot; Q1 2023 &ndash; Q2 2028</div>
+  <h1>A Financial Story, Told Progressively</h1>
+  <p class="lede">Ten merchant programs, tracked from origination through today, then projected two years forward. This walkthrough builds the story in order: where the book stands, where it's headed, how it's aging, what the cohorts reveal about unit economics, and who's actually driving returns.</p>
+</section>
+
+<section class="slide alt">
+  <div class="kicker">Chapter 1 &middot; Where We Start</div>
+  <h2>The book today, as of Q2 2026</h2>
+  <p class="lede">Ten programs, four years of originations, a portfolio that's grown from nothing to real scale.</p>
+  <div class="stat-row">
+    <div class="stat"><div class="n">1,680,211</div><div class="l">total accounts on book</div></div>
+    <div class="stat"><div class="n">$2.99B</div><div class="l">outstanding balance</div></div>
+    <div class="stat"><div class="n">$1.43B</div><div class="l">quarterly transaction volume</div></div>
+    <div class="stat"><div class="n">$115.1M</div><div class="l">quarterly gross revenue</div></div>
+    <div class="stat"><div class="n">12.6%</div><div class="l">contribution margin, this quarter</div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Chapter 2 &middot; Where It's Headed</div>
+  <h2>Growth continues, margins hold</h2>
+  <p class="lede">Projecting all 10 programs forward 8 quarters: revenue keeps compounding, and &mdash; once a thin-history extrapolation bug was caught and fixed &mdash; margins settle into a stable band rather than eroding.</p>
+  <div class="legend-row">
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--blue)"></span>Gross Revenue</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--aqua)"></span>Gross Profit</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--orange)"></span>Contribution Profit</span>
+  </div>
+  <svg class="chart-svg" viewBox="0 0 860 300" role="img" aria-label="Gross Revenue, Gross Profit, and Contribution Profit by quarter, actuals through Q2 2026 then forecast"><rect class="seam-band" x="560.7" y="16" width="279.3" height="244"/><text class="seam-label" x="564.7" y="28">Forecast &rarr;</text><line class="gridline" x1="58" x2="840" y1="199.0" y2="199.0"/><text class="axis-text" x="50" y="202.0" text-anchor="end">$65.9M</text><line class="gridline" x1="58" x2="840" y1="138.0" y2="138.0"/><text class="axis-text" x="50" y="141.0" text-anchor="end">$132.8M</text><line class="gridline" x1="58" x2="840" y1="77.0" y2="77.0"/><text class="axis-text" x="50" y="80.0" text-anchor="end">$199.7M</text><line class="gridline" x1="58" x2="840" y1="16.0" y2="16.0"/><text class="axis-text" x="50" y="19.0" text-anchor="end">$266.7M</text><line class="axis-line" x1="58" x2="840" y1="260" y2="260"/><text class="axis-text" x="58.0" y="286" text-anchor="middle">Q1 2023</text><text class="axis-text" x="169.7" y="286" text-anchor="middle">Q4 2023</text><text class="axis-text" x="281.4" y="286" text-anchor="middle">Q3 2024</text><text class="axis-text" x="393.1" y="286" text-anchor="middle">Q2 2025</text><text class="axis-text" x="504.9" y="286" text-anchor="middle">Q1 2026</text><text class="axis-text" x="616.6" y="286" text-anchor="middle">Q4 2026</text><text class="axis-text" x="728.3" y="286" text-anchor="middle">Q3 2027</text><text class="axis-text" x="840.0" y="286" text-anchor="middle">Q2 2028</text><polyline class="series-line" points="58.0,258.2 95.2,256.9 132.5,254.2 169.7,248.8 207.0,247.8 244.2,242.2 281.4,235.0 318.7,218.8 355.9,216.8 393.1,206.3 430.4,192.9 467.6,165.1 504.9,166.5 542.1,154.1 579.3,142.6 616.6,109.7 653.8,115.7 691.0,107.8 728.3,86.3 765.5,42.0 802.8,52.6 840.0,44.6" style="stroke:var(--blue)"/><circle class="series-dot" cx="58.0" cy="258.2" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="95.2" cy="256.9" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="132.5" cy="254.2" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="169.7" cy="248.8" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="207.0" cy="247.8" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="244.2" cy="242.2" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="281.4" cy="235.0" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="318.7" cy="218.8" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="355.9" cy="216.8" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="393.1" cy="206.3" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="430.4" cy="192.9" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="467.6" cy="165.1" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="504.9" cy="166.5" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="542.1" cy="154.1" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="579.3" cy="142.6" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="616.6" cy="109.7" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="653.8" cy="115.7" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="691.0" cy="107.8" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="728.3" cy="86.3" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="765.5" cy="42.0" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="802.8" cy="52.6" r="3" style="fill:var(--blue)"/><circle class="series-dot" cx="840.0" cy="44.6" r="3" style="fill:var(--blue)"/><polyline class="series-line" points="58.0,259.0 95.2,259.1 132.5,259.1 169.7,259.7 207.0,257.9 244.2,258.1 281.4,257.6 318.7,258.1 355.9,251.7 393.1,253.1 430.4,252.0 467.6,253.6 504.9,240.0 542.1,243.9 579.3,243.9 616.6,244.6 653.8,226.9 691.0,238.0 728.3,235.7 765.5,237.1 802.8,211.9 840.0,228.5" style="stroke:var(--aqua)"/><circle class="series-dot" cx="58.0" cy="259.0" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="95.2" cy="259.1" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="132.5" cy="259.1" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="169.7" cy="259.7" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="207.0" cy="257.9" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="244.2" cy="258.1" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="281.4" cy="257.6" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="318.7" cy="258.1" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="355.9" cy="251.7" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="393.1" cy="253.1" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="430.4" cy="252.0" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="467.6" cy="253.6" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="504.9" cy="240.0" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="542.1" cy="243.9" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="579.3" cy="243.9" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="616.6" cy="244.6" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="653.8" cy="226.9" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="691.0" cy="238.0" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="728.3" cy="235.7" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="765.5" cy="237.1" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="802.8" cy="211.9" r="3" style="fill:var(--aqua)"/><circle class="series-dot" cx="840.0" cy="228.5" r="3" style="fill:var(--aqua)"/><polyline class="series-line" points="58.0,259.1 95.2,259.1 132.5,259.3 169.7,259.9 207.0,258.1 244.2,258.5 281.4,258.1 318.7,258.9 355.9,252.6 393.1,254.3 430.4,253.3 467.6,255.2 504.9,241.8 542.1,245.9 579.3,246.2 616.6,247.1 653.8,229.7 691.0,241.0 728.3,238.9 765.5,240.6 802.8,215.8 840.0,232.7" style="stroke:var(--orange)"/><circle class="series-dot" cx="58.0" cy="259.1" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="95.2" cy="259.1" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="132.5" cy="259.3" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="169.7" cy="259.9" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="207.0" cy="258.1" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="244.2" cy="258.5" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="281.4" cy="258.1" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="318.7" cy="258.9" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="355.9" cy="252.6" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="393.1" cy="254.3" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="430.4" cy="253.3" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="467.6" cy="255.2" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="504.9" cy="241.8" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="542.1" cy="245.9" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="579.3" cy="246.2" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="616.6" cy="247.1" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="653.8" cy="229.7" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="691.0" cy="241.0" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="728.3" cy="238.9" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="765.5" cy="240.6" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="802.8" cy="215.8" r="3" style="fill:var(--orange)"/><circle class="series-dot" cx="840.0" cy="232.7" r="3" style="fill:var(--orange)"/><text class="series-end-label" x="838.0" y="47.6" style="fill:var(--blue)">$235.3M</text><text class="series-end-label" x="838.0" y="231.5" style="fill:var(--aqua)">$33.6M</text><text class="series-end-label" x="838.0" y="244.5" style="fill:var(--orange)">$29.0M</text></svg>
+  <div class="stat-row">
+    <div class="stat"><div class="n">$1.50B</div><div class="l">8-quarter Gross Revenue</div></div>
+    <div class="stat"><div class="n">$198.4M</div><div class="l">8-quarter Contribution Profit</div></div>
+    <div class="stat"><div class="n">13.2%</div><div class="l">average Contribution Margin</div></div>
+  </div>
+  <p style="font-size:0.85rem;color:var(--muted);max-width:660px;margin-top:1rem">Contribution Profit reflects the ongoing unit economics of the existing book &mdash; it does not net out Acquisition Cost / CAC. CAC is evaluated separately via LTV/CAC (Chapter 7) because it's recovered over a customer's lifetime, not expensed in the quarter it's spent.</p>
+</section>
+
+<section class="slide alt">
+  <div class="kicker">Chapter 3 &middot; How the Book Is Aging</div>
+  <h2>The portfolio is seasoning, not just growing</h2>
+  <p class="lede">Even as new cohorts keep originating, the balance mix is shifting toward older, more-matured vintages &mdash; the existing book ages into "seasoned" faster than new originations can dilute it.</p>
+  <svg class="chart-svg" viewBox="0 0 860 280" role="img" aria-label="Outstanding Balance mix by cohort age, Young/Mid/Seasoned, over time"><polygon points="20.0,16.0 59.0,16.0 98.1,16.0 137.1,16.0 176.2,16.0 215.2,34.1 254.3,45.3 293.3,59.0 332.4,75.1 371.4,79.4 410.5,89.4 449.5,95.4 488.6,114.6 527.6,121.5 566.7,130.6 605.7,137.7 644.8,147.4 683.8,147.3 722.9,150.1 761.9,152.7 801.0,155.0 840.0,156.9 840.0,240.0 801.0,240.0 761.9,240.0 722.9,240.0 683.8,240.0 644.8,240.0 605.7,240.0 566.7,240.0 527.6,240.0 488.6,240.0 449.5,240.0 410.5,240.0 371.4,240.0 332.4,240.0 293.3,240.0 254.3,240.0 215.2,240.0 176.2,240.0 137.1,240.0 98.1,240.0 59.0,240.0 20.0,240.0" style="fill:var(--blue)" opacity="0.85"/><polygon points="20.0,16.0 59.0,16.0 98.1,16.0 137.1,16.0 176.2,16.0 215.2,16.0 254.3,16.0 293.3,16.0 332.4,16.0 371.4,22.3 410.5,27.4 449.5,34.8 488.6,44.1 527.6,49.0 566.7,56.8 605.7,64.1 644.8,75.2 683.8,81.2 722.9,88.4 761.9,94.4 801.0,101.9 840.0,102.8 840.0,156.9 801.0,155.0 761.9,152.7 722.9,150.1 683.8,147.3 644.8,147.4 605.7,137.7 566.7,130.6 527.6,121.5 488.6,114.6 449.5,95.4 410.5,89.4 371.4,79.4 332.4,75.1 293.3,59.0 254.3,45.3 215.2,34.1 176.2,16.0 137.1,16.0 98.1,16.0 59.0,16.0 20.0,16.0" style="fill:var(--orange)" opacity="0.85"/><polygon points="20.0,16.0 59.0,16.0 98.1,16.0 137.1,16.0 176.2,16.0 215.2,16.0 254.3,16.0 293.3,16.0 332.4,16.0 371.4,16.0 410.5,16.0 449.5,16.0 488.6,16.0 527.6,16.0 566.7,16.0 605.7,16.0 644.8,16.0 683.8,16.0 722.9,16.0 761.9,16.0 801.0,16.0 840.0,16.0 840.0,102.8 801.0,101.9 761.9,94.4 722.9,88.4 683.8,81.2 644.8,75.2 605.7,64.1 566.7,56.8 527.6,49.0 488.6,44.1 449.5,34.8 410.5,27.4 371.4,22.3 332.4,16.0 293.3,16.0 254.3,16.0 215.2,16.0 176.2,16.0 137.1,16.0 98.1,16.0 59.0,16.0 20.0,16.0" style="fill:var(--aqua)" opacity="0.85"/><text class="axis-text" x="20" y="237.0">0%</text><text class="axis-text" x="20" y="125.0">50%</text><text class="axis-text" x="20" y="13.0">100%</text><text class="axis-text" x="20.0" y="266" text-anchor="middle">Q1 2023</text><text class="axis-text" x="137.1" y="266" text-anchor="middle">Q4 2023</text><text class="axis-text" x="254.3" y="266" text-anchor="middle">Q3 2024</text><text class="axis-text" x="371.4" y="266" text-anchor="middle">Q2 2025</text><text class="axis-text" x="488.6" y="266" text-anchor="middle">Q1 2026</text><text class="axis-text" x="605.7" y="266" text-anchor="middle">Q4 2026</text><text class="axis-text" x="722.9" y="266" text-anchor="middle">Q3 2027</text><text class="axis-text" x="840.0" y="266" text-anchor="middle">Q2 2028</text></svg>
+  <div class="legend-row">
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--blue)"></span>Young (0-4Q)</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--orange)"></span>Mid (5-8Q)</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:var(--aqua)"></span>Seasoned (9Q+)</span>
+  </div>
+  <p>Young-cohort share of the balance falls from <strong>100%</strong> to <strong>37%</strong>, while seasoned share rises from <strong>0%</strong> to <strong>39%</strong> over the forecast window.</p>
+</section>
+
+<section class="slide">
+  <div class="kicker">Chapter 4 &middot; What Cohorts Reveal</div>
+  <h2>Per-account economics mature on a predictable curve</h2>
+  <p class="lede">Every vintage starts negative (acquisition costs land before revenue does), climbs through its first several quarters, then plateaus. Older and newer cohorts of the same merchant follow essentially the same shape at the same age &mdash; a sign the underlying unit economics are stable, not drifting.</p>
+  <svg class="chart-svg" viewBox="0 0 860 300" role="img" aria-label="Contribution Profit per Account by Quarters Since Book, for the oldest, a middle, and the newest vintage of Merchant 1"><line class="gridline" x1="58" x2="740.4" y1="207.9" y2="207.9"/><text class="axis-text" x="50" y="210.9" text-anchor="end">$0</text><line class="gridline" x1="58" x2="740.4" y1="112.0" y2="112.0"/><text class="axis-text" x="50" y="115.0" text-anchor="end">$10</text><line class="gridline" x1="58" x2="740.4" y1="16.0" y2="16.0"/><text class="axis-text" x="50" y="19.0" text-anchor="end">$21</text><line class="axis-line" x1="58" x2="740.4" y1="260" y2="260"/><text class="axis-text" x="58.0" y="286" text-anchor="middle">0</text><text class="axis-text" x="123.0" y="286" text-anchor="middle">2</text><text class="axis-text" x="188.0" y="286" text-anchor="middle">4</text><text class="axis-text" x="253.0" y="286" text-anchor="middle">6</text><text class="axis-text" x="318.0" y="286" text-anchor="middle">8</text><text class="axis-text" x="383.0" y="286" text-anchor="middle">10</text><text class="axis-text" x="447.9" y="286" text-anchor="middle">12</text><text class="axis-text" x="512.9" y="286" text-anchor="middle">14</text><text class="axis-text" x="577.9" y="286" text-anchor="middle">16</text><text class="axis-text" x="642.9" y="286" text-anchor="middle">18</text><text class="axis-text" x="707.9" y="286" text-anchor="middle">20</text><text class="axis-text" x="399.2" y="298" text-anchor="middle">Quarters Since Book</text><text class="axis-text" x="14" y="138.0" text-anchor="middle" transform="rotate(-90 14 138.0)">Contribution Profit per Account ($)</text><polyline class="series-line" points="58.0,198.3 90.5,222.8 123.0,211.6 155.5,234.7 188.0,124.5 220.5,147.2 253.0,155.0 285.5,177.2 318.0,81.9 350.5,129.1 383.0,133.4 415.4,153.7 447.9,81.2 480.4,120.8 512.9,102.9 545.4,114.1 577.9,41.0 610.4,105.6 642.9,104.6 675.4,115.0 707.9,45.9 740.4,107.5" style="stroke:var(--blue)"/><circle cx="740.4" cy="107.5" r="3.5" style="fill:var(--blue)"/><polyline class="series-line" points="58.0,253.2 90.5,159.4 123.0,176.3 155.5,171.9 188.0,194.0 220.5,84.2 253.0,118.5 285.5,127.1 318.0,137.6 350.5,59.9 383.0,127.1 415.4,122.6 447.9,124.8 480.4,85.7 512.9,124.1" style="stroke:var(--orange)"/><circle cx="512.9" cy="124.1" r="3.5" style="fill:var(--orange)"/><polyline class="series-line" points="58.0,220.8 90.5,206.0 123.0,200.6 155.5,125.2 188.0,159.7 220.5,142.4 253.0,147.7 285.5,60.3 318.0,121.2" style="stroke:var(--aqua)"/><circle cx="318.0" cy="121.2" r="3.5" style="fill:var(--aqua)"/><text class="series-end-label" x="738.4" y="110.5" style="fill:var(--blue)">Oldest (Q1 2023)</text><text class="series-end-label" x="324.0" y="124.2" style="fill:var(--aqua)">Newest (Q2 2026)</text><text class="series-end-label" x="518.9" y="137.2" style="fill:var(--orange)">Mid (Q4 2024)</text></svg>
+  <p>Merchant 1 shown, three representative vintages by age at booking. The newest vintage's later quarters are forecast, not yet observed.</p>
+</section>
+
+<section class="slide alt">
+  <div class="kicker">Chapter 5 &middot; The Reveal</div>
+  <h2>LTV/CAC is inverted by FICO tier &mdash; sharply</h2>
+  <p class="lede">Better credit tiers are <em>less</em> profitable to acquire, not more. High-FICO customers spend heavily &mdash; driving proportionally more rewards cost, since rewards scale with spend &mdash; but revolve less, generating far less interest income, the portfolio's largest revenue line. Lower-FICO customers carry higher charge-off rates, but a materially higher APR/yield on what they do revolve more than compensates.</p>
+  <svg class="chart-svg" viewBox="0 0 760 176" role="img" aria-label="LTV to CAC ratio by FICO tier, Poor through Exceptional"><line class="axis-line" x1="415.0" x2="415.0" y1="0" y2="176"/><text class="axis-text" x="142" y="28.0" text-anchor="end">Poor (300-579)</text><rect x="415.0" y="15.0" width="265.0" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="686.0" y="28.0" text-anchor="start">2.94x</text><text class="axis-text" x="142" y="60.0" text-anchor="end">Fair (580-669)</text><rect x="415.0" y="47.0" width="215.8" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="636.8" y="60.0" text-anchor="start">2.39x</text><text class="axis-text" x="142" y="92.0" text-anchor="end">Good (670-739)</text><rect x="415.0" y="79.0" width="105.7" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="526.7" y="92.0" text-anchor="start">1.17x</text><text class="axis-text" x="142" y="124.0" text-anchor="end">Very Good (740-799)</text><rect x="415.0" y="111.0" width="26.4" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="447.4" y="124.0" text-anchor="start">0.29x</text><text class="axis-text" x="142" y="156.0" text-anchor="end">Exceptional (800-850)</text><rect x="385.9" y="143.0" width="29.1" height="18" rx="3" style="fill:var(--red)"/><text class="bar-value-label" x="379.9" y="156.0" text-anchor="end">-0.32x</text></svg>
+  <table class="mini-table"><thead><tr><th>FICO Tier</th><th>LTV/Account</th><th>CAC/Account</th><th>LTV/CAC</th></tr></thead><tbody><tr><td>Poor (300-579)</td><td>$160</td><td>$55</td><td>2.94x</td></tr><tr><td>Fair (580-669)</td><td>$170</td><td>$71</td><td>2.39x</td></tr><tr><td>Good (670-739)</td><td>$98</td><td>$84</td><td>1.17x</td></tr><tr><td>Very Good (740-799)</td><td>$29</td><td>$98</td><td>0.29x</td></tr><tr><td>Exceptional (800-850)</td><td>-$37</td><td>$114</td><td>-0.32x</td></tr></tbody></table>
+</section>
+
+<section class="slide">
+  <div class="kicker">Chapter 6 &middot; Winners and Drags</div>
+  <h2>Scale and unit-economics efficiency aren't the same thing</h2>
+  <p class="lede"><strong>Merchant 4</strong> is the strongest contributor ($42.4M Contribution Profit, 19.6% margin) over the forecast window. <strong>Merchant 7</strong> is the one clear structural drag (-$305K, -0.2% margin) &mdash; not just smaller or slower-growing, genuinely negative.</p>
+  <svg class="chart-svg" viewBox="0 0 760 336" role="img" aria-label="Contribution Profit by merchant, forecast period"><line class="axis-line" x1="415.0" x2="415.0" y1="0" y2="336"/><text class="axis-text" x="142" y="28.0" text-anchor="end">Merchant 7</text><rect x="413.1" y="15.0" width="1.9" height="18" rx="3" style="fill:var(--red)"/><text class="bar-value-label" x="407.1" y="28.0" text-anchor="end">-$305K</text><text class="axis-text" x="142" y="60.0" text-anchor="end">Merchant 10</text><rect x="415.0" y="47.0" width="30.3" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="451.3" y="60.0" text-anchor="start">$4.8M</text><text class="axis-text" x="142" y="92.0" text-anchor="end">Merchant 8</text><rect x="415.0" y="79.0" width="38.3" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="459.3" y="92.0" text-anchor="start">$6.1M</text><text class="axis-text" x="142" y="124.0" text-anchor="end">Merchant 9</text><rect x="415.0" y="111.0" width="45.4" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="466.4" y="124.0" text-anchor="start">$7.3M</text><text class="axis-text" x="142" y="156.0" text-anchor="end">Merchant 2</text><rect x="415.0" y="143.0" width="105.4" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="526.4" y="156.0" text-anchor="start">$16.9M</text><text class="axis-text" x="142" y="188.0" text-anchor="end">Merchant 6</text><rect x="415.0" y="175.0" width="161.3" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="582.3" y="188.0" text-anchor="start">$25.8M</text><text class="axis-text" x="142" y="220.0" text-anchor="end">Merchant 3</text><rect x="415.0" y="207.0" width="171.2" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="592.2" y="220.0" text-anchor="start">$27.4M</text><text class="axis-text" x="142" y="252.0" text-anchor="end">Merchant 5</text><rect x="415.0" y="239.0" width="191.2" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="612.2" y="252.0" text-anchor="start">$30.6M</text><text class="axis-text" x="142" y="284.0" text-anchor="end">Merchant 1</text><rect x="415.0" y="271.0" width="233.0" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="654.0" y="284.0" text-anchor="start">$37.3M</text><text class="axis-text" x="142" y="316.0" text-anchor="end">Merchant 4</text><rect x="415.0" y="303.0" width="265.0" height="18" rx="3" style="fill:var(--blue)"/><text class="bar-value-label" x="686.0" y="316.0" text-anchor="start">$42.4M</text></svg>
+</section>
+
+<section class="slide alt">
+  <div class="kicker">Chapter 7 &middot; The Bottom Line</div>
+  <h2>Portfolio LTV/CAC: 0.85x</h2>
+  <p class="lede">Below breakeven on a blended basis &mdash; driven almost entirely by the FICO-tier dynamic in Chapter 5, not by any single merchant. Several individual merchants and every below-Good FICO tier clear well above 1x; the blend is dragged down by acquisition spend on segments that don't pay it back within three years.</p>
+  <div class="risk-card">
+    <div class="risk-title">Risk 1 &middot; Thin-history extrapolation</div>
+    <p style="margin:0">The two newest merchants have only 2&ndash;4 quarters of actual history. Their forecasts lean on pooled cross-merchant patterns rather than their own observed behavior.</p>
+  </div>
+  <div class="risk-card">
+    <div class="risk-title">Risk 2 &middot; FICO-tier reward economics may be mispriced</div>
+    <p style="margin:0">The mechanism is real and traceable in the data, but this is a portfolio-wide average &mdash; worth validating against the actual unit-economics view before acting on it.</p>
+  </div>
+  <div class="risk-card">
+    <div class="risk-title">Risk 3 &middot; Every rate is held flat</div>
+    <p style="margin:0">Yield, loss rate, interchange, rewards &mdash; none carry a macro or competitive-response assumption into the 2-year horizon.</p>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Chapter 8 &middot; Where Better Data Would Help</div>
+  <h2>Four gaps worth closing, in priority order</h2>
+  <p class="lede">None of these break the model &mdash; they're the places a bit more data would sharpen a real number rather than a reasonable proxy.</p>
+  <ol>
+    <li><strong>Current, not just origination, FICO.</strong> The FICO-tier reveal in Chapter 5 is the single most consequential finding in this forecast, and it's built entirely on credit tier <em>at booking</em>. A refreshed/behavioral FICO feed would show whether it's really a FICO-tier effect or a credit-migration effect, and would sharpen every loss-rate curve at the same time.</li>
+    <li><strong>Fee Revenue and Other Credits lack a strong empirical driver.</strong> Best observed correlations are 0.47 (Fee Revenue vs. Outstanding Balance) and 0.19 (Other Credits, sporadic). Together under 5% of Gross Revenue, so low stakes today &mdash; but they're shipped on the best available proxy, not a validated relationship, and would be the first thing to revisit if either line grows.</li>
+    <li><strong>More history for Merchants 9 &amp; 10.</strong> 2 and 4 quarters of actuals respectively &mdash; both are pooled to cross-merchant curves rather than forecast on their own observed behavior. Merchant 10's ~19%/quarter New Account growth rate is the single least-tested assumption in this model; a few more actual quarters would let it stand on its own.</li>
+    <li><strong>A macro or rate-environment signal.</strong> Every rate &mdash; yield, loss, interchange, rewards &mdash; is held at its last observed level for 8 quarters. The data as given has no external field to peg a scenario to; even a simple rate-environment or unemployment index would let a rate-sensitivity range replace the current single point estimate.</li>
+  </ol>
+</section>
+
+<section class="slide alt">
+  <div class="kicker">Go deeper</div>
+  <h2>7/8 independent audit checks pass</h2>
+  <p class="lede">Every number in this story is recomputed via a separate code path from source, not just asserted. Explore the live filterable P&amp;L, or see exactly how the model was built.</p>
+  <div class="cta-row">
+    <a href="unified_narrative.html">Back to overview</a>
+    <a href="dashboard.html">Open the executive dashboard</a>
+    <a class="secondary" href="pitch_deck.html">See how it was built</a>
+  </div>
+</section>
+
+<footer>Built from combined_actuals_forecast.parquet via the scripts/ pipeline &middot; see BUILD_LOG.md for full detail.</footer>
+</div>
+<script>
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark"
+      || (document.documentElement.getAttribute("data-theme") !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("imprint-theme", next); } catch (e) {}
+  });
+</script>
+</body>
+</html>
