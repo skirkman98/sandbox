@@ -1,5 +1,5 @@
 """
-reporting/10_build_dashboard.py
+10_build_dashboard.py
 
 Builds output/dashboard.html — the primary executive deliverable: a rolled-up
 Management P&L with live filters (Merchant / Vintage / FICO / Scenario), KPI
@@ -24,7 +24,7 @@ Design choices, per the data-visualization skill:
 import json
 from pathlib import Path
 
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
 
 
 def main():
@@ -310,7 +310,7 @@ HTML_TEMPLATE = r"""<!doctype html>
   </details>
 </section>
 
-<footer class="page-foot">Built from combined_actuals_forecast.parquet via scripts/reporting/09_export_dashboard_data.py + reporting/10_build_dashboard.py. See <a href="pitch_deck.html">pitch_deck.html</a> for methodology and <a href="narrative_report.html">narrative_report.html</a> for the full written narrative.</footer>
+<footer class="page-foot">Built from combined_actuals_forecast.parquet via scripts/09_export_dashboard_data.py + 10_build_dashboard.py. See <a href="pitch_deck.html">pitch_deck.html</a> for methodology and <a href="narrative_report.html">narrative_report.html</a> for the full written narrative.</footer>
 </div>
 
 <script>
@@ -402,7 +402,7 @@ function matchesFilter(row, f, opts) {
 // cohort once per report date it appears in -- summing ltv/cac out of
 // `rows` would count every cohort's LTV N times, N = number of quarters
 // in the filtered range). This is why the two arrays are kept separate
-// rather than merged into one -- see reporting/09_export_dashboard_data.py.
+// rather than merged into one -- see 09_export_dashboard_data.py.
 function sumFlow(rows) {
   const t = { gr: 0, cos: 0, opex: 0, acq: 0, na: 0 };
   for (const r of rows) {
@@ -523,7 +523,7 @@ function renderTrendChart(f) {
   // pass so two series ending at similar values (Gross Profit and
   // Contribution Profit routinely land close together) don't render as
   // overlapping, illegible text. Mirrors the fix already applied to the
-  // Python-side chart helpers in reporting/08_build_narrative_deck.py -- this is a
+  // Python-side chart helpers in 08_build_narrative_deck.py -- this is a
   // separate, from-scratch SVG renderer, so it needed its own copy of the
   // same fix (found by a 2026-08-26 visual QA pass: the two labels
   // rendered fully on top of each other in the default dashboard view).

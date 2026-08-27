@@ -1,5 +1,5 @@
 """
-core_engine/12_validate_exceptional_fico.py
+12_validate_exceptional_fico.py
 
 Day-2 TODO item 2: validate the MAGNITUDE of the already-confirmed
 Exceptional-FICO negative-Contribution-Profit finding (BUILD_LOG.md's Risk
@@ -8,10 +8,10 @@ $274,600 revenue -- 33% -- vs Poor-tier's $4,001 on $139,200, 2.9%).
 Direction is not in question; only whether the size of the effect holds up
 across more merchants or was an artifact of which one example got traced.
 
-Diagnostic script, like core_engine/02_gap_analysis.py -- not a pipeline dependency.
-Deliberately does not import pnl_utils.py / core_engine/05_pnl_rollup.py (re-implements
+Diagnostic script, like 02_gap_analysis.py -- not a pipeline dependency.
+Deliberately does not import pnl_utils.py / 05_pnl_rollup.py (re-implements
 the bucketing rule from scratch) -- same "don't share the builder's blind
-spot" discipline as core_engine/07_audit.py. Findings get written up in BUILD_LOG.md by
+spot" discipline as 07_audit.py. Findings get written up in BUILD_LOG.md by
 hand; this script only prints/computes, it doesn't fix anything itself.
 
 Three parts:
@@ -19,7 +19,7 @@ Three parts:
      merchants beyond Merchant 1, each at ITS OWN most mature actual cohort
      (see note in most_mature_cohort() on why "QSB 13" doesn't generalize).
   2. Systematic outlier scan: cohort-level undiscounted 12Q CP/Account
-     (independently recomputed, same method as core_engine/07_audit.py Check E) via
+     (independently recomputed, same method as 07_audit.py Check E) via
      z-score within each FICO tier, plus a scan of the Rewards rate curve
      itself for any single-QSB outlier observations.
   3. Rewards-rate sanity check: confirm the Rewards line item is correctly
@@ -32,7 +32,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 OUT_DIR = BASE_DIR / "output"
 
@@ -137,7 +137,7 @@ def run_hand_derivations(df):
 
 def recompute_cp_per_account(df):
     """Undiscounted 12Q cumulative CP/Account per cohort -- same method as
-    core_engine/07_audit.py's check_e_ltv_sanity (independently re-derived here too,
+    07_audit.py's check_e_ltv_sanity (independently re-derived here too,
     not imported, per this file's own independence discipline)."""
     cp_raw = df[df["Bucket"].isin(["Gross Revenue", "Cost of Sales", "Operating Expense"])]
     cp_raw = cp_raw.groupby(["Merchant", "Vintage Index", "FICO Bucket", "QSB"])["Value"].sum().rename("CP").reset_index()
@@ -258,7 +258,7 @@ def run_rewards_sanity_check(df):
         print(f"    {m:12s} {tag}")
     if pooled_merchants:
         print(f"\n  -> {len(pooled_merchants)} merchant(s) ({', '.join(sorted(pooled_merchants))}) use a single "
-              "blended Rewards rate across ALL FICO tiers (thin-history pooling, see core_engine/03_curve_library.py's "
+              "blended Rewards rate across ALL FICO tiers (thin-history pooling, see 03_curve_library.py's "
               "POOL_THRESHOLD). For these merchants, the Exceptional-FICO 'rewards-heavy' rate premium is NOT "
               "modeled -- Exceptional customers there are assumed to pay the same rewards rate as every other "
               "tier. Whatever FICO-tier variation shows up in their forecast LTV/CAC comes only from differing "

@@ -1,12 +1,21 @@
 # Build Log — Imprint Corporate Finance Case Study
 
 This is the AI-collaboration record and full written narrative for the forecasting
-model in `scripts/` and the final report at `output/report.html`. It exists for two
-reasons: (1) the shipped deliverable is scripts + a static HTML report rather than a
+model in `scripts/` and the final reports in `output/html/`. It exists for two
+reasons: (1) the shipped deliverable is scripts + static HTML reports rather than a
 live notebook, so this doc is where the "how did the AI actually get directed"
 signal lives; (2) it's the full written version of the required Narrative
 (risks / winners-drags / data gaps), which the brief says can be verbal in the
 debrief but is stronger written down first.
+
+**A note on script numbers below:** this log is chronological, and the repo was
+renumbered and reorganized twice along the way (into a continuous 01-14 sequence
+split across `scripts/core_engine/`+`scripts/reporting/` on 2026-08-26, then
+flattened back into a single `scripts/` directory on 2026-08-27 — see the final two
+entries). Script names/numbers referenced in each entry below reflect what that
+script was called *at the time it was written*, not necessarily its current name.
+For current, authoritative script numbering, see `README.md` or
+`docs/SCRIPTS_GUIDE.md`.
 
 ---
 
@@ -251,9 +260,10 @@ pass; everything else here is cosmetic.
    forecast materially.
 2. **FICO-tier reward/interest economics may be structurally mispriced — or the
    model may be over-reading a real but narrower pattern.** LTV/CAC is sharply
-   divergent by FICO tier and inverted from intuition: Poor (2.97x) and Fair
-   (2.40x) are strongly profitable to acquire; Very Good (0.24x) and Exceptional
-   (-0.39x) are weak-to-value-destructive. The mechanism is real and traceable in
+   divergent by FICO tier and inverted from intuition: Poor (2.94x) and Fair
+   (2.39x) are strongly profitable to acquire, Good (1.17x) sits in between; Very
+   Good (0.29x) and Exceptional (-0.32x) are weak-to-value-destructive. The
+   mechanism is real and traceable in
    the data (Exceptional-tier customers at Merchant 1 pay $91,497 in rewards on
    $274,600 revenue — 33% — against Poor-tier's $4,001 on $139,200, 2.9%, while
    Poor's much higher APR/yield more than offsets its higher charge-off rate) —
@@ -276,26 +286,30 @@ Ranked by forecast-period (Q3'26–Q2'28) Contribution Profit:
 
 | Rank | Merchant | Contribution Profit | Contribution Margin |
 |---|---|---|---|
-| 1 | Merchant 4 | $41.9M | 19.5% |
-| 2 | Merchant 1 | $33.4M | 10.7% |
-| 3 | Merchant 5 | $32.6M | 27.1% |
-| 4 | Merchant 3 | $27.0M | 16.9% |
-| 5 | Merchant 6 | $24.0M | 14.5% |
-| 6 | Merchant 2 | $9.4M | 3.9% |
-| 7 | Merchant 9 | $7.5M | 26.7% |
-| 8 | Merchant 8 | $5.7M | 16.2% |
-| 9 | Merchant 10 | $1.0M | 2.0% |
-| 10 | **Merchant 7** | **-$11.7M** | **-7.0%** |
+| 1 | Merchant 4 | $42.4M | 19.6% |
+| 2 | Merchant 1 | $37.3M | 11.8% |
+| 3 | Merchant 5 | $30.6M | 25.3% |
+| 4 | Merchant 3 | $27.4M | 17.1% |
+| 5 | Merchant 6 | $25.8M | 15.6% |
+| 6 | Merchant 2 | $16.9M | 6.9% |
+| 7 | Merchant 9 | $7.3M | 25.8% |
+| 8 | Merchant 8 | $6.1M | 17.5% |
+| 9 | Merchant 10 | $4.8M | 9.5% |
+| 10 | **Merchant 7** | **-$0.3M** | **-0.2%** |
 
 Merchant 4 is the strongest absolute contributor; Merchant 5 has the best margin
-of any merchant with meaningful scale (27.1%). **Merchant 7 is the one clear
-structural drag** — negative contribution profit and negative margin, not just a
-smaller or slower-growing program. Merchant 1 and Merchant 2 are worth calling
-out specifically: they're the two largest, most mature programs by revenue, but
-their margins (10.7% and 3.9%) are mediocre relative to smaller, higher-margin
-programs like Merchant 5 and Merchant 9 — scale and unit-economics efficiency
-are not the same thing here, and Merchant 2 in particular deserves scrutiny on
-*why* its margin is so thin despite its size.
+of any merchant with meaningful scale (25.3% — Merchant 9 is nominally higher at
+25.8%, but at roughly a fifth of Merchant 5's Contribution Profit). **Merchant 7
+is the one merchant that doesn't clear its own acquisition cost**, though only
+marginally — roughly breakeven, not the outright structural drag it was earlier
+in the build (-$11.7M / -7.0% before the seasonality-extension and Cost of Funds
+driver-basis fixes documented below moved it most of the way back). Merchant 1
+and Merchant 2 are worth calling out specifically: they're two of the largest,
+most mature programs by revenue, but their margins (11.8% and 6.9%) are still
+thin relative to smaller, higher-margin programs like Merchant 5 and Merchant 9 —
+scale and unit-economics efficiency are not the same thing here, and Merchant 2
+in particular still deserves scrutiny on *why* its margin is so thin despite its
+size.
 
 ### Where better data would improve accuracy
 
@@ -329,20 +343,21 @@ are not the same thing here, and Merchant 2 in particular deserves scrutiny on
 ## Headline forecast numbers (Base Case, Q3 2026–Q2 2028, all 10 merchants)
 
 - Gross Revenue: $1.50B
-- Gross Profit: $198.6M (13.3% average Gross Margin)
-- Contribution Profit: $170.8M (11.4% average Contribution Margin)
-- Portfolio-weighted LTV/CAC: **0.75x** (below breakeven — driven by the FICO-tier
+- Gross Profit: $226.2M (15.0% average Gross Margin)
+- Contribution Profit: $198.4M (13.2% average Contribution Margin)
+- Portfolio-weighted LTV/CAC: **0.85x** (below breakeven — driven by the FICO-tier
   dynamic above; several individual merchants and FICO tiers clear >1.9x, up to
-  Merchant 5's 2.07x). *(Revised 2026-08-26 from an earlier-reported 0.82x — an
-  audit pass found `build_cp_population_curve`'s LTV-extrapolation fill averaged
-  each cohort's own CP/Account ratio unweighted by cohort size, overstating the
-  population-level curve by 13%-140% depending on cohort age. Fixed to weight by
-  New Accounts; see "Weighted-average and independent tie-out audit" below. Only
-  cohort-level LTV/CAC figures moved — Gross Revenue/Gross Profit/Contribution
-  Profit $ and the P&L margins above are unaffected, since they don't touch this
-  curve.)*
+  Merchant 5's 1.95x). *(This figure moved three times over the build — 0.82x →
+  0.75x → 0.78x → 0.85x — as successive fixes landed: the weighted-average
+  tie-out audit (unweighted LTV-extrapolation fill overstated the population-level
+  curve by 13%-140% depending on cohort age; see "Weighted-average and independent
+  tie-out audit" below), extending seasonality beyond NTV to the other 3 base
+  drivers, and the Cost of Funds driver-basis fix — each documented in its own
+  entry below. Gross Revenue/Gross Profit/Contribution Profit $ and margins above
+  reflect the fully reconciled state after all of those fixes.)*
 
-Full detail, charts, and the merchant/FICO cuts are in `output/narrative_report.html`.
+Full detail, charts, and the merchant/FICO cuts are in
+`output/html/narrative_report.html`.
 
 ---
 
@@ -1241,3 +1256,36 @@ across `scripts/` and found none outside `BUILD_LOG.md`/`TODO.md`/
 docs); confirmed all four HTML outputs' cross-links are bare relative
 filenames (no `output/` prefix), so moving them together into `output/html/`
 didn't break navigation between them.
+
+## Repo reorganization — `scripts/core_engine`/`scripts/reporting` flattened (2026-08-27)
+
+Requested by the user: collapse the `core_engine`/`reporting` split from the
+prior reorg back into one flat `scripts/` directory, numbered files only
+(01-14, same numbering as before — no renumbering this time, just moving
+each file up one level). `git mv` used throughout so history follows each
+file.
+
+**Fix required in every moved script**: each one resolves `OUT_DIR`/
+`DATA_DIR`/`BASE_DIR` via `Path(__file__).resolve().parent...`, counting
+directory levels up to the repo root. Two levels deep
+(`scripts/core_engine/x.py`) needed `.parent.parent.parent`; one level deep
+(`scripts/x.py`) needs `.parent.parent`. Same adjustment for the
+`sys.path.insert(...)` lines that make `pnl_utils.py`/`viz_utils.py`
+importable (`.parent.parent` → `.parent`, since the shared modules now sit
+in the script's own directory). Also swept every in-code comment/docstring
+referencing the old `core_engine/`/`reporting/` path prefixes (cross-file
+pointers like "see core_engine/07_audit.py"), plus the dashboard's own
+footer string, which cited its own build path.
+
+Updated `README.md`'s repo-layout tree and pipeline command list, and
+`docs/SCRIPTS_GUIDE.md`'s section headers (dropped the now-inaccurate
+`scripts/core_engine/`/`scripts/reporting/` path labels — the "core engine"
+vs. "reporting" split is now a logical grouping only, not a physical one).
+
+**Verified**: full pipeline rerun end-to-end (all 14 scripts) from the
+flattened locations, zero errors. `git diff` on every regenerated `output/`
+CSV/parquet came back empty — a pure path fix, no numeric change anywhere;
+audit still 7/8 (Check B FAIL-explained, unchanged); portfolio LTV/CAC still
+0.85x. Only `dashboard.html` shows a diff, and only in its footer text (the
+`scripts/reporting/09_...` path string it echoes) — the other three HTML
+deliverables are byte-identical to before the move.

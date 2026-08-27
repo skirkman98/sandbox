@@ -1,5 +1,5 @@
 """
-core_engine/07_audit.py
+07_audit.py
 
 INDEPENDENT AUDIT — deliberately does not import or call anything from
 04/05/06. Every check here is recomputed with its own code path, most of
@@ -51,12 +51,12 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 OUT_DIR = BASE_DIR / "output"
 
 FORECAST_START_IDX = 14
-FACTOR_CLIP = (0.7, 1.3)  # must match core_engine/04_forecast_engine.py's backstop -- checked independently below
+FACTOR_CLIP = (0.7, 1.3)  # must match 04_forecast_engine.py's backstop -- checked independently below
 
 PASS, FAIL = "PASS", "FAIL"
 results = []
@@ -231,7 +231,7 @@ def check_c_seam_continuity():
     # NB: the first forecast step for a backbook cohort uses
     # get_factor(qsb_from=last_actual_qsb) -- if that specific qsb_from is
     # within the merchant's own observed range, it's a genuinely-observed
-    # historical factor and is NOT clip-bounded (core_engine/04_forecast_engine.py only
+    # historical factor and is NOT clip-bounded (04_forecast_engine.py only
     # clips the *fallback* branch, deliberately -- clipping real signal would
     # suppress genuine business variation). An earlier version of this check
     # used FACTOR_CLIP itself as the tolerance band and flagged Merchant 3 /
@@ -309,7 +309,7 @@ def check_d_cac_sanity():
 # ---------------------------------------------------------------------------
 
 def check_e_ltv_sanity():
-    """A parallel independent-audit pass found that core_engine/05_pnl_rollup.py's LTV
+    """A parallel independent-audit pass found that 05_pnl_rollup.py's LTV
     extrapolation had a compounding-instability bug: it used a multiplicative
     chain-ladder factor (correct for the driver forecast's volumes/balances)
     on Contribution-Profit-per-Account, a SIGNED quantity that crosses zero --
@@ -354,7 +354,7 @@ def check_e_ltv_sanity():
 
     # Weighted (sum CP / sum NA), not a naive mean of each cohort's own
     # ratio -- same "average of ratios" bug found (and fixed) independently
-    # in core_engine/05_pnl_rollup.py's build_cp_population_curve on 2026-08-26. Fixed
+    # in 05_pnl_rollup.py's build_cp_population_curve on 2026-08-26. Fixed
     # here too, separately, since this check is deliberately not importing
     # 06's code -- see this function's own docstring on why that matters.
     global_curve = cp_raw.groupby("QSB").apply(lambda g: g["CP"].sum() / g["NA"].sum()).sort_index()
@@ -436,17 +436,17 @@ def check_f_independent_trend():
 # Check G: seasonal index sanity (Day 2 TODO item 1)
 # ---------------------------------------------------------------------------
 
-SEASONAL_CLIP = (0.5, 1.6)  # must match core_engine/03_curve_library.py's SEASONAL_CLIP -- checked independently below
+SEASONAL_CLIP = (0.5, 1.6)  # must match 03_curve_library.py's SEASONAL_CLIP -- checked independently below
 
 
-# Must match core_engine/04_forecast_engine.py's SEASONAL_LINE_ITEMS -- every Driver
+# Must match 04_forecast_engine.py's SEASONAL_LINE_ITEMS -- every Driver
 # line item that's supposed to carry its own independently-measured index.
 SEASONAL_LINE_ITEMS = ["Net Transaction Volume", "Revolve Balance", "Outstanding Balance", "In-Month Active Accounts"]
 
 
 def check_g_seasonal_index():
     """Independently re-derives the quarter-of-year seasonal index for EACH
-    of SEASONAL_LINE_ITEMS (same method as core_engine/03_curve_library.py's
+    of SEASONAL_LINE_ITEMS (same method as 03_curve_library.py's
     build_seasonal_index -- re-implemented here, not imported) and checks,
     per item: (1) the shipped curve_seasonal_index.csv matches this
     independent recompute, and (2) every multiplier sits inside the declared
@@ -513,7 +513,7 @@ def check_g_seasonal_index():
 def check_h_driver_kpi_sanity():
     """Day 2 item 7: independently recomputes PPAA and Payment Rate for one
     sample quarter, straight from combined_actuals_forecast.parquet (NOT
-    from dashboard_data.json, which is itself reporting/09_export_dashboard_data.py's
+    from dashboard_data.json, which is itself 09_export_dashboard_data.py's
     output -- reading that would just check the export script against
     itself), then confirms it matches what actually shipped in
     dashboard_data.json's `detail` array for the same quarter. Sample:

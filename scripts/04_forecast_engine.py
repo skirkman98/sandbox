@@ -1,5 +1,5 @@
 """
-core_engine/04_forecast_engine.py
+04_forecast_engine.py
 
 Projects all 10 merchants forward 8 quarters (Q3 2026 - Q2 2028, Report Date
 Index 14-21) and produces one combined flat table with the same schema as
@@ -8,7 +8,7 @@ the raw actuals plus a `Scenario` column ("Actual" vs "Base Case").
 BACKBOOK (existing cohorts, Vintage Index <= 13):
     For each driver, take the cohort's last actual value and roll it forward
     QSB-by-QSB using the chain-ladder development factors from
-    core_engine/03_curve_library.py. Beyond the oldest observed QSB (13, only Merchant 1's
+    03_curve_library.py. Beyond the oldest observed QSB (13, only Merchant 1's
     Q1 2023 vintage reaches it), no development factor is observable -- we
     hold the last known factor constant (a "tail factor" assumption, flagged
     in BUILD_LOG.md). This is the majority of the extrapolation risk in the
@@ -37,8 +37,8 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 FORECAST_START_IDX = 14  # Q3 2026
 FORECAST_END_IDX = 21    # Q2 2028 (inclusive) -> 8 quarters
@@ -58,7 +58,7 @@ GROWTH_CAP = 0.25  # cap trailing-quarter growth rate applied per forecast quart
 
 # Seasonality (Day 2 TODO item 1, extended after shipping): applied ONLY to
 # these drivers, ONLY on forecast-period rows -- see build_seasonal_index()
-# in core_engine/03_curve_library.py for how each item's own 4 quarter-of-year
+# in 03_curve_library.py for how each item's own 4 quarter-of-year
 # multipliers are independently estimated. Originally NTV only; extended to
 # Revolve Balance/Outstanding Balance/In-Month Active Accounts after a user
 # caught the forecast's Gross Revenue swing running bigger than the actuals'

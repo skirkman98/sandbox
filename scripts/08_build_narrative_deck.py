@@ -1,5 +1,5 @@
 """
-reporting/08_build_narrative_deck.py
+08_build_narrative_deck.py
 
 Builds output/narrative_report.html -- the financial story, told progressively
 in slides: where the book stands today, where it's headed, how it's aging,
@@ -30,13 +30,13 @@ import pandas as pd
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from viz_utils import (
     index_to_quarter, fmt_money, fmt_pct, fmt_x, data_table,
     svg_line_chart, svg_diverging_bar_chart, svg_stacked_area, svg_cohort_chart,
 )
 
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
 
 FORECAST_START_IDX = 14
 

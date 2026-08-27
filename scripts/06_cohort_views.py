@@ -1,5 +1,5 @@
 """
-core_engine/06_cohort_views.py
+06_cohort_views.py
 
 The required "Cohort Views" deliverable: shows how the portfolio evolves by
 vintage, using both actuals and forecast. Produces the data tables the HTML
@@ -25,10 +25,10 @@ import numpy as np
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pnl_utils import classify_pnl_bucket
 
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
 
 
 def load():

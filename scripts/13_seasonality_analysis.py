@@ -1,5 +1,5 @@
 """
-core_engine/13_seasonality_analysis.py
+13_seasonality_analysis.py
 
 Day-2 TODO item 1: the forecast engine indexes purely by QSB (cohort age) --
 there's no calendar-quarter notion anywhere in the curve/rate library, so a
@@ -33,14 +33,14 @@ Method:
      pooling.
 
 Diagnostic only -- does not modify the pipeline. If the signal is judged
-material, core_engine/03_curve_library.py/core_engine/04_forecast_engine.py get a follow-up change;
+material, 03_curve_library.py/04_forecast_engine.py get a follow-up change;
 if not, this is documented in BUILD_LOG.md as investigated-and-skipped.
 """
 import pandas as pd
 import numpy as np
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 OUT_DIR = BASE_DIR / "output"
 
 # Decided BEFORE looking at results.

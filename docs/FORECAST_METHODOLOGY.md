@@ -23,7 +23,7 @@ No third "mid-book" tier exists here — just two:
 
 **Assumed** (judgment-set parameters/techniques, disclosed in-code):
 - `GROWTH_CAP` (±25%/q), `FACTOR_CLIP` (0.7–1.3x), `SEASONAL_CLIP` (0.5–1.6x) — hard backstops preventing thin-sample noise from compounding into unrealistic trajectories.
-- `POOL_THRESHOLD`, `MATURE_QSB_THRESHOLD` — when to pool a merchant's grain or borrow a cross-merchant late-stage curve.
+- `POOL_THRESHOLD` (5 vintages), `MATURE_QSB_THRESHOLD` (6 quarters) — when to pool a merchant's grain or borrow a cross-merchant late-stage curve.
 - `ANCHOR_RATIO_DAMPING` (0.2) — weight given to a cohort's single real anchor-quarter observation vs. the destination quarter's full seasonal multiplier.
 - Applying a historical QSB=0 seed ratio to *future*, not-yet-observed frontbook cohorts.
 - Every rate/factor beyond its observed range held flat — the biggest embedded assumption: no macro/rate-environment shift is in the Base Case.

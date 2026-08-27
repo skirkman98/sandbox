@@ -1,5 +1,5 @@
 """
-core_engine/02_gap_analysis.py
+02_gap_analysis.py
 
 Throwaway diagnostic pass over the cleaned actuals. Answers the questions
 that determine build decisions in 04/05:
@@ -16,7 +16,7 @@ Prints findings to stdout; does not produce a shipped artifact.
 import pandas as pd
 from pathlib import Path
 
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
 CLEAN_PATH = OUT_DIR / "parquet" / "clean_actuals.parquet"
 
 

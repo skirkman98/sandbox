@@ -2,7 +2,7 @@
 viz_utils.py
 
 Shared formatting + static-SVG chart helpers used by every narrative-style
-HTML builder (08, 11, 14). Extracted out of reporting/08_build_narrative_deck.py --
+HTML builder (08, 11, 14). Extracted out of 08_build_narrative_deck.py --
 which was the only place these lived -- so a third HTML builder (14) doesn't
 copy-paste a third version. This is the same "pull it into one shared module"
 fix already applied to pnl_utils.py after duplicated classification logic
@@ -244,7 +244,7 @@ def svg_cohort_chart(series, width=860, height=300, aria_label="", y_axis_label=
 # ---------------------------------------------------------------------------
 # Static architecture diagrams -- hand-authored inline SVG (a handful of
 # boxes/arrows, not worth a diagram library). Originally built once for
-# pitch_deck.html; hoisted here so reporting/14_build_unified_narrative.py's condensed
+# pitch_deck.html; hoisted here so 14_build_unified_narrative.py's condensed
 # "working model" chapter reuses the exact same diagrams rather than a third
 # hand-copied version drifting out of sync with the technical deck's.
 # ---------------------------------------------------------------------------

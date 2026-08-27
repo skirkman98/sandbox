@@ -1,5 +1,5 @@
 """
-core_engine/05_pnl_rollup.py
+05_pnl_rollup.py
 
 Builds:
   1. The consolidated quarterly Imprint Management P&L (all merchants rolled
@@ -50,10 +50,10 @@ import numpy as np
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pnl_utils import classify_pnl_bucket, add_pnl_bucket
 
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
 
 ANNUAL_HURDLE_RATE = 0.15
 QUARTERLY_DISCOUNT_RATE = (1 + ANNUAL_HURDLE_RATE) ** 0.25 - 1

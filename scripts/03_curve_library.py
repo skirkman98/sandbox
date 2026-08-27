@@ -1,8 +1,8 @@
 """
-core_engine/03_curve_library.py
+03_curve_library.py
 
 Builds the reusable "engine" that both the backbook and frontbook forecasts
-in core_engine/04_forecast_engine.py draw from:
+in 04_forecast_engine.py draw from:
 
   1. Development factors (chain-ladder style) for each driver, by
      (Merchant, Grain FICO, QSB -> QSB+1). Volume-weighted ratio-of-sums
@@ -33,7 +33,7 @@ the rest get full Merchant x FICO granularity.
 import pandas as pd
 from pathlib import Path
 
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
 CLEAN_PATH = OUT_DIR / "parquet" / "clean_actuals.parquet"
 
 POOL_THRESHOLD = 5  # merchants with < 5 vintages of history get pooled to Merchant-level curves
@@ -139,7 +139,7 @@ def build_pooled_tail_rates(rate_curves: pd.DataFrame) -> pd.DataFrame:
 SEASONAL_CLIP = (0.5, 1.6)  # Backstop against a pathological result -- wider than the +/-20%
 # a generic anti-overfitting guard would use, because the empirical signal here is unusually
 # strong and consistent (85% Q1-to-Q4 swing, 100% of the 5 merchants with >= 8 actual quarters
-# agree Q4 is the peak / Q1 the trough -- see scripts/core_engine/13_seasonality_analysis.py and BUILD_LOG.md
+# agree Q4 is the peak / Q1 the trough -- see scripts/13_seasonality_analysis.py and BUILD_LOG.md
 # "Day 2 -- Seasonality"), not a thin/noisy estimate that calls for suppressing toward 1.0.
 
 # Every Driver line item that gets its own seasonal index, independently
@@ -166,9 +166,9 @@ def build_seasonal_index(df: pd.DataFrame, line_item: str) -> pd.DataFrame:
     existing QSB-based age curve -- called once per item in SEASONAL_LINE_ITEMS
     above, each getting its own independently-measured index (deliberately
     NOT sharing NTV's index across items with a different real phase -- see
-    core_engine/04_forecast_engine.py for how each is applied to its own driver, and how
+    04_forecast_engine.py for how each is applied to its own driver, and how
     that then propagates into the Rate-Derived $ lines keyed off it).
-    Confirmed material and reliable by scripts/core_engine/13_seasonality_analysis.py
+    Confirmed material and reliable by scripts/13_seasonality_analysis.py
     (for NTV) and by direct measurement against the shipped dashboard (for
     the 3 added later) before this function was extended -- see BUILD_LOG.md
     for the full investigation both times (this isn't a build-first-check-
@@ -186,7 +186,7 @@ def build_seasonal_index(df: pd.DataFrame, line_item: str) -> pd.DataFrame:
 
     Normalized so the 4 multipliers average to 1.0 -- applied evenly across a
     full forecast year, this reshapes the distribution across quarters without
-    changing the annualized total (checked independently in core_engine/07_audit.py).
+    changing the annualized total (checked independently in 07_audit.py).
     """
     item = df[(df["Line Item"] == line_item) & (df["Model Role"] == "Driver")]
     cohort = item.groupby(["Merchant", "Vintage Index", "QSB"])["Value"].sum().reset_index()
@@ -279,7 +279,7 @@ def build_acquisition_rates(df: pd.DataFrame, classification: pd.DataFrame) -> p
 
 def main():
     df = load()
-    classification = pd.read_csv(Path(__file__).resolve().parent.parent.parent / "data" / "line_item_classification.csv")
+    classification = pd.read_csv(Path(__file__).resolve().parent.parent / "data" / "line_item_classification.csv")
 
     pooled = merchants_needing_pooling(df)
     df = add_grain_fico(df, pooled)
@@ -316,7 +316,7 @@ def main():
     print(f"Acquisition-cost rates: {len(acq_rates)} rows -> curve_acquisition_rates.csv")
 
     # Also persist the grain-tagged actuals + which merchants were pooled,
-    # so core_engine/04_forecast_engine.py doesn't have to re-derive it.
+    # so 04_forecast_engine.py doesn't have to re-derive it.
     df.to_parquet(OUT_DIR / "parquet" / "clean_actuals_grained.parquet", index=False)
     pd.Series(sorted(pooled), name="pooled_merchant").to_csv(OUT_DIR / "csv" / "pooled_merchants.csv", index=False)
 

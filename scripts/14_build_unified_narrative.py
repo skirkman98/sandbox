@@ -1,5 +1,5 @@
 """
-reporting/14_build_unified_narrative.py
+14_build_unified_narrative.py
 
 Builds output/unified_narrative.html -- the new top-level entry point for
 the whole deliverable. Where dashboard.html, narrative_report.html, and
@@ -13,7 +13,7 @@ in that order, each getting its own chapter. It closes by pointing to the
 three existing docs as supporting detail for a reader who wants to go
 deeper on any one facet.
 
-Design choices mirror reporting/08_build_narrative_deck.py deliberately (fixed
+Design choices mirror 08_build_narrative_deck.py deliberately (fixed
 narrative, precomputed static SVG, not another live-filtering surface --
 that's the dashboard's job): same palette, same slide/stat-row/risk-card
 CSS, same chart helpers (now shared via viz_utils.py rather than a third
@@ -32,7 +32,7 @@ import pandas as pd
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from viz_utils import (
     index_to_quarter, fmt_money, fmt_pct, fmt_x, data_table,
     svg_line_chart, svg_diverging_bar_chart, svg_stacked_area, svg_cohort_chart,
@@ -40,7 +40,7 @@ from viz_utils import (
 )
 from pnl_utils import classify_pnl_bucket
 
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
 
 FORECAST_START_IDX = 14
 

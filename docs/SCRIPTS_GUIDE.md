@@ -1,8 +1,8 @@
 # Scripts Guide
 
-One-line scope per script. **Grounded** = derived empirically from actuals. **Assumed** = a judgment-set parameter/technique. Full detail: `BUILD_LOG.md`.
+One-line scope per script. All scripts live flat in `scripts/`, numbered 01-14 in run order (see `README.md`'s Pipeline section); the two groupings below are logical, not physical. **Grounded** = derived empirically from actuals. **Assumed** = a judgment-set parameter/technique. Full detail: `BUILD_LOG.md`.
 
-## `scripts/core_engine/`
+## Core engine
 
 | # | Script | Scope | Grounded vs. assumed |
 |---|---|---|---|
@@ -16,7 +16,7 @@ One-line scope per script. **Grounded** = derived empirically from actuals. **As
 | 12 | validate_exceptional_fico | Diagnostic: hand-derive Exceptional-FICO magnitude, more merchants. | Grounded re-derivation. |
 | 13 | seasonality_analysis | Diagnostic: is calendar seasonality material before building it in? | Grounded hypothesis test. |
 
-## `scripts/reporting/`
+## Reporting
 
 | # | Script | Scope |
 |---|---|---|
@@ -28,7 +28,7 @@ One-line scope per script. **Grounded** = derived empirically from actuals. **As
 
 All reporting scripts are presentation layer: they read already-computed CSVs/parquet/JSON and format, never introduce new forecast logic.
 
-## Shared modules (`scripts/`)
+## Shared modules
 
 - **pnl_utils.py** — `classify_pnl_bucket`, keyed off `Model Role` (not `Category`) after a bug shipped from a Category-based, duplicated version.
 - **viz_utils.py** — formatting (`fmt_money`, `fmt_pct`, `fmt_x`) + static-SVG chart builders shared by all reporting scripts.

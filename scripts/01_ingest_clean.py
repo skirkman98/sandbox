@@ -1,5 +1,5 @@
 """
-core_engine/01_ingest_clean.py
+01_ingest_clean.py
 
 Loads the raw case study data dump, applies the renames/derived fields agreed
 in the build plan, joins the line item classification, and validates the
@@ -18,8 +18,8 @@ import re
 import pandas as pd
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
 OUT_DIR.mkdir(exist_ok=True)
 # Output is organized by file type; every downstream script assumes these
 # subfolders exist, so create them all here, first in the pipeline.

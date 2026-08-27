@@ -1,8 +1,8 @@
 """
-reporting/09_export_dashboard_data.py
+09_export_dashboard_data.py
 
 Exports a compact, pre-aggregated dataset for the interactive executive
-dashboard (reporting/10_build_dashboard.py). The dashboard needs to filter by
+dashboard (10_build_dashboard.py). The dashboard needs to filter by
 Merchant x Vintage x FICO x Scenario and recompute the P&L live in the
 browser -- so this script does the one aggregation step that's expensive
 in Python (rolling 192K raw line-item rows up to P&L buckets) and ships
@@ -35,7 +35,7 @@ Ships THREE arrays at different grains -- deliberately not merged into one:
     the exact bug class the `cohorts` array below already exists to prevent
     (cohort-grain-vs-flow-grain N-counting) for a new set of line items. The
     `Aggregation` column in line_item_classification.csv (Flow/Stock) flags
-    this; it's shipped in the `dims.lineItemKeys` legend so reporting/10_build_dashboard.py
+    this; it's shipped in the `dims.lineItemKeys` legend so 10_build_dashboard.py
     can enforce "never sum a Stock across quarters" at render time, and the
     detail table itself is rendered TRANSPOSED (line items as rows, quarters
     as columns) specifically so a stock is only ever summed *across entities
@@ -68,7 +68,7 @@ import math
 import pandas as pd
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 OUT_DIR = BASE_DIR / "output"
 
@@ -196,7 +196,7 @@ def build_detail(df, classification):
 
 def build_line_item_legend(classification):
     """dims.lineItemKeys legend: short key -> label/family/category/
-    aggregation, ordered per GROUP_ORDER/detail_group so reporting/10_build_dashboard.py
+    aggregation, ordered per GROUP_ORDER/detail_group so 10_build_dashboard.py
     doesn't have to re-derive the traditional P&L grouping in JS."""
     cls = classification[classification["Model Role"] != "Excluded-Metric"].copy()
     cls["group"] = cls.apply(detail_group, axis=1)

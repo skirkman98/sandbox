@@ -1,5 +1,5 @@
 """
-reporting/11_build_pitch_deck.py
+11_build_pitch_deck.py
 
 Builds output/pitch_deck.html -- a presentation-style walkthrough of how the
 forecasting model was built: architecture, core assumptions, the bugs found
@@ -22,10 +22,10 @@ import sys
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from viz_utils import ARCHITECTURE_DIAGRAM_SVG, BACKBOOK_FRONTBOOK_DIAGRAM_SVG
 
-OUT_DIR = Path(__file__).resolve().parent.parent.parent / "output"
+OUT_DIR = Path(__file__).resolve().parent.parent / "output"
 
 PALETTE = {
     "blue": "#2a78d6", "orange": "#eb6834", "aqua": "#1baf7a",
